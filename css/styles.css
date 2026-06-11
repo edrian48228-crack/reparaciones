@@ -27,11 +27,11 @@ input,select,textarea{font-family:inherit;font-size:15px;max-width:100%}
 /* Icons */
 .ico{width:26px;height:26px;fill:currentColor;display:block;flex-shrink:0}
 .ico.lg{width:40px;height:40px}
-.crown{width:14px;height:14px;fill:#d4af37;flex-shrink:0}
+.crown{width:14px;height:14px;fill:var(--primary-glow);flex-shrink:0;filter:drop-shadow(0 0 4px rgba(155,42,42,.55))}
 .crown.small{width:14px;height:14px}
 
-/* Brand name — segunda palabra en marrón */
-.brand-name .w2{color:var(--brown-glow);font-weight:700}
+/* Brand name — segunda palabra en el color del botón principal */
+.brand-name .w2{color:var(--primary-glow);font-weight:700;text-shadow:0 0 12px rgba(155,42,42,.35)}
 
 /* LOGIN */
 .login-screen{
@@ -94,12 +94,12 @@ input,select,textarea{font-family:inherit;font-size:15px;max-width:100%}
 .brand-name{margin:0;font-size:20px;font-weight:800;letter-spacing:.3px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
 .creator-row{
   display:flex;align-items:center;justify-content:space-between;gap:8px;
-  padding-left:48px; /* alinea bajo el nombre, no bajo el logo */
-  margin-top:0;font-size:11px;color:var(--muted);
+  padding-left:0; /* pegado a la izquierda como pidió el usuario */
+  margin-top:2px;font-size:11px;color:var(--muted);
   flex-wrap:wrap
 }
 .creator-left{display:flex;align-items:center;gap:5px;min-width:0;overflow:hidden}
-.creator-left b{color:#e8c46a;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.creator-left b{color:var(--primary-glow);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 0 8px rgba(155,42,42,.35)}
 .creator-right{display:flex;align-items:center;gap:6px;flex-shrink:0}
 .creator-chip{
   display:inline-flex;align-items:center;gap:4px;
@@ -110,6 +110,7 @@ input,select,textarea{font-family:inherit;font-size:15px;max-width:100%}
 .creator-chip svg{width:12px;height:12px}
 .creator-chip.wa{color:#a8e3b3;border-color:rgba(76,201,115,.35)}
 .creator-chip.tel{color:#e8c46a;border-color:rgba(232,196,106,.35)}
+.creator-chip.sms{color:#8bb5ff;border-color:rgba(108,160,255,.35)}
 
 .icon-btn{
   background:transparent;border:0;color:var(--text);padding:8px;border-radius:10px;cursor:pointer;flex-shrink:0
@@ -134,7 +135,8 @@ input,select,textarea{font-family:inherit;font-size:15px;max-width:100%}
 }
 .form-close .ico{width:20px;height:20px}
 
-main{padding:140px 16px 110px;max-width:720px;margin:0 auto;width:100%}
+main{padding:96px 16px 110px;max-width:720px;margin:0 auto;width:100%}
+@media(min-width:600px){ main{padding-top:104px} }
 
 /* Tabbar */
 .tabbar{
@@ -163,7 +165,7 @@ main{padding:140px 16px 110px;max-width:720px;margin:0 auto;width:100%}
 /* Sections */
 .section-title{font-size:13px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin:20px 4px 10px;font-weight:600}
 .greeting{font-size:22px;font-weight:700;margin:4px 4px 16px}
-.greeting span{color:var(--brown-glow)}
+.greeting span{color:var(--primary-glow);text-shadow:0 0 12px rgba(155,42,42,.35)}
 
 /* === Cabecera de grupo elegante (líneas) — reutilizada en formulario === */
 .date-group-header,
@@ -543,3 +545,74 @@ main{padding:140px 16px 110px;max-width:720px;margin:0 auto;width:100%}
 .phone-picker .pp-actions a.call{color:#e8c46a}
 .phone-picker .pp-actions a.wa{color:#4cc973}
 .phone-picker .pp-actions a svg{width:18px;height:18px;fill:currentColor}
+
+/* === SMS chips (sustituye a WhatsApp en cliente) === */
+.repair-info .card-phones .mini-action.sms{color:#8bb5ff;border-color:rgba(108,160,255,.35)}
+.phones-display .phone-link.sms{
+  background:linear-gradient(135deg,rgba(108,160,255,.18),rgba(48,90,180,.12));
+  border-color:rgba(108,160,255,.4);color:#bcd2ff
+}
+.phone-picker .pp-actions a.sms{color:#8bb5ff}
+
+/* === Botón eliminar pequeño dentro de la tarjeta de reparación === */
+.repair-card{position:relative}
+.card-delete{
+  position:absolute;top:8px;right:8px;width:30px;height:30px;border-radius:50%;
+  background:rgba(155,42,42,.15);border:1px solid rgba(155,42,42,.35);color:#ff9b9b;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:.85;
+  transition:all .15s;z-index:2
+}
+.card-delete:hover{opacity:1;background:rgba(155,42,42,.35);color:#fff}
+.card-delete .ico{width:14px;height:14px}
+
+/* === Cancelar reparación: mismo estilo que registrar === */
+.btn-primary.btn-cancel{
+  background:linear-gradient(135deg,#c0392b,#7a1f1f);
+  box-shadow:0 4px 14px rgba(192,57,43,.4);
+  display:flex;align-items:center;justify-content:center;gap:8px
+}
+.btn-primary.btn-cancel .ico{width:18px;height:18px}
+
+/* === Logo upload en admin === */
+.logo-upload{
+  display:flex;align-items:center;gap:14px;flex-wrap:wrap
+}
+.logo-preview{
+  width:72px;height:72px;border-radius:16px;flex-shrink:0;
+  background:linear-gradient(135deg,var(--primary-glow),var(--primary-2));
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 6px 16px rgba(122,31,31,.4);overflow:hidden
+}
+.logo-preview svg{width:46px;height:46px;color:#fff;fill:#fff}
+.logo-preview img{width:100%;height:100%;object-fit:cover}
+.logo-actions{display:flex;flex-direction:column;gap:6px;flex:1;min-width:160px}
+.logo-actions .btn-secondary{width:auto}
+
+/* === Confirm modal elegante === */
+.confirm-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:300;
+  display:flex;align-items:center;justify-content:center;padding:20px;
+  animation:fade .15s
+}
+.confirm-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:18px;
+  padding:22px;max-width:380px;width:100%;box-shadow:var(--shadow);
+  animation:slideUp .2s
+}
+.confirm-card h3{margin:0 0 8px;font-size:17px}
+.confirm-card p{margin:0 0 18px;color:var(--muted);font-size:14px}
+.confirm-card .btn-row{margin-top:0}
+
+/* === Ticket print styles (cuando se imprime, solo el ticket visible) === */
+@media print{
+  body * {visibility:hidden}
+  #ticketPrintArea, #ticketPrintArea *{visibility:visible}
+  #ticketPrintArea{
+    position:absolute;left:0;top:0;width:100%;padding:24px;background:#fff;color:#000
+  }
+}
+
+/* Logo personalizado (imagen) llena el contenedor */
+.brand-logo img, .logo-circle img{
+  width:100%;height:100%;object-fit:cover;border-radius:inherit;display:block
+}

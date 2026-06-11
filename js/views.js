@@ -19,9 +19,11 @@ const Views = (() => {
     save: '<svg viewBox="0 0 24 24" class="ico"><path d="M17 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7l-4-4zm-5 16a3 3 0 1 1 0-6 3 3 0 0 1 0 6zm3-10H5V5h10v4z"/></svg>',
     phone: '<svg viewBox="0 0 24 24" class="ico"><path d="M6.6 10.8a15 15 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.58 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1 11.4 11.4 0 0 0 .58 3.6 1 1 0 0 1-.25 1l-2.23 2.2z"/></svg>',
     wa: '<svg viewBox="0 0 32 32" class="ico"><path d="M16 3C9 3 3.5 8.5 3.5 15.5c0 2.4.7 4.7 1.9 6.7L3 29l7-1.8a12.5 12.5 0 0 0 6 1.5c7 0 12.5-5.5 12.5-12.5S23 3 16 3zm6.9 17.5c-.3.8-1.7 1.6-2.4 1.6-.6.1-1.4.1-2.3-.1-.5-.2-1.2-.4-2.1-.8-3.7-1.6-6.2-5.3-6.4-5.6-.2-.2-1.5-2-1.5-3.9 0-1.8.9-2.7 1.3-3.1.3-.3.7-.4 1-.4h.7c.2 0 .5 0 .8.6.3.7 1 2.5 1.1 2.6.1.2.2.4 0 .6-.1.2-.2.4-.4.6-.2.2-.4.5-.5.6-.2.2-.4.4-.2.7.2.3 1 1.6 2.1 2.6 1.5 1.3 2.7 1.7 3 1.9.3.1.5.1.7-.1.2-.2.8-.9 1-1.2.2-.3.4-.3.7-.2.3.1 2 1 2.4 1.2.4.2.6.3.7.4 0 .1 0 .8-.3 1.6z"/></svg>',
+    sms: '<svg viewBox="0 0 24 24" class="ico"><path d="M20 2H4a2 2 0 0 0-2 2v18l4-4h14a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2zM7 11h2v2H7v-2zm4 0h2v2h-2v-2zm4 0h2v2h-2v-2z"/></svg>',
     upload: '<svg viewBox="0 0 24 24" class="ico"><path d="M9 16V10H5l7-7 7 7h-4v6H9zm-4 4v-2h14v2H5z"/></svg>',
     close: '<svg viewBox="0 0 24 24" class="ico"><path d="M19 6.4L17.6 5 12 10.6 6.4 5 5 6.4 10.6 12 5 17.6 6.4 19 12 13.4 17.6 19 19 17.6 13.4 12z"/></svg>',
-    cancel: '<svg viewBox="0 0 24 24" class="ico"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm5 14.6L16.6 18 12 13.4 7.4 18 6 16.6 10.6 12 6 7.4 7.4 6 12 10.6 16.6 6 18 7.4 13.4 12 18 16.6z"/></svg>'
+    cancel: '<svg viewBox="0 0 24 24" class="ico"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm5 14.6L16.6 18 12 13.4 7.4 18 6 16.6 10.6 12 6 7.4 7.4 6 12 10.6 16.6 6 18 7.4 13.4 12 18 16.6z"/></svg>',
+    print: '<svg viewBox="0 0 24 24" class="ico"><path d="M19 8H5a3 3 0 0 0-3 3v6h4v4h12v-4h4v-6a3 3 0 0 0-3-3zm-3 11H8v-5h8v5zm3-7a1 1 0 1 1 0-2 1 1 0 0 1 0 2zM18 3H6v4h12V3z"/></svg>'
   };
 
   const STATUS_KEYS = ['pending','in_progress','completed','delivered'];
@@ -60,10 +62,10 @@ const Views = (() => {
     if(phones.length){
       if(phones.length === 1){
         const tel = UI.phoneClean(phones[0]);
-        const wa = UI.phoneWa(phones[0]);
+        const sms = UI.phoneSms(phones[0]);
         phoneHtml = `<div class="card-phones">
           <a class="mini-action call" href="tel:${escape(tel)}" data-stop="1">${ICONS.phone}<span>${escape(phones[0])}</span></a>
-          <a class="mini-action wa" href="https://wa.me/${escape(wa)}" target="_blank" rel="noopener" data-stop="1">${ICONS.wa}<span>WhatsApp</span></a>
+          <a class="mini-action sms" href="sms:${escape(sms)}" data-stop="1">${ICONS.sms}<span>SMS</span></a>
         </div>`;
       } else {
         phoneHtml = `<div class="card-phones">
@@ -73,6 +75,7 @@ const Views = (() => {
     }
     return `
       <div class="repair-card" data-id="${r.id}">
+        <button class="card-delete" data-del-id="${escape(r.id)}" data-stop="1" title="Eliminar reparación" aria-label="Eliminar">${ICONS.trash}</button>
         <div class="thumb">${thumb}</div>
         <div class="repair-info">
           <h3>${escape(r.clientName||'Cliente')}</h3>
@@ -85,7 +88,7 @@ const Views = (() => {
   function bindRepairCards(){
     view().querySelectorAll('.repair-card').forEach(c=>{
       c.addEventListener('click', e=>{
-        // No abrir detalle si se pulsó un botón de teléfono dentro de la tarjeta
+        // No abrir detalle si se pulsó un botón de teléfono o eliminar
         if(e.target.closest('[data-stop]')) return;
         showRepair(c.dataset.id);
       });
@@ -96,23 +99,39 @@ const Views = (() => {
         openPhonePicker(b.dataset.pickPhone);
       });
     });
+    view().querySelectorAll('[data-del-id]').forEach(b=>{
+      b.addEventListener('click', async e=>{
+        e.preventDefault(); e.stopPropagation();
+        const id = b.dataset.delId;
+        const r = DB.findRepair(id);
+        const ok = await UI.confirmDialog({
+          title:'Eliminar reparación',
+          message:`¿Eliminar definitivamente la reparación ${id}${r&&r.clientName?' de '+r.clientName:''}? Esta acción no se puede deshacer.`,
+          okText:'Eliminar', cancelText:'Cancelar', danger:true
+        });
+        if(!ok) return;
+        DB.deleteRepair(id);
+        UI.toast('Reparación eliminada');
+        App.refresh();
+      });
+    });
   }
 
   function openPhonePicker(id){
     const r = DB.findRepair(id); if(!r) return;
     const phones = (r.clientPhones||[]).filter(Boolean);
     const rows = phones.map(p=>{
-      const tel = UI.phoneClean(p); const wa = UI.phoneWa(p);
+      const tel = UI.phoneClean(p); const sms = UI.phoneSms(p);
       return `<div class="pp-row">
         <span class="pp-num">${escape(p)}</span>
         <div class="pp-actions">
           <a class="call" href="tel:${escape(tel)}" title="Llamar">${ICONS.phone}</a>
-          <a class="wa" href="https://wa.me/${escape(wa)}" target="_blank" rel="noopener" title="WhatsApp">${ICONS.wa}</a>
+          <a class="sms" href="sms:${escape(sms)}" title="SMS">${ICONS.sms}</a>
         </div>
       </div>`;
     }).join('');
     UI.openModal(`<h2 style="margin:0 0 4px;font-size:18px">${escape(r.clientName||'Cliente')}</h2>
-      <p class="muted small" style="margin:0 0 8px">Elige un número para llamar o enviar WhatsApp.</p>
+      <p class="muted small" style="margin:0 0 8px">Elige un número para llamar o enviar SMS.</p>
       <div class="phone-picker">${rows}</div>`);
   }
 
@@ -268,7 +287,6 @@ const Views = (() => {
           <div class="na-placeholder">Sin datos asignados</div>
         </div>
 
-        ${naWrap('clientEmail','Email',`<input name="clientEmail" type="email" inputmode="email" value="${escape(r.clientEmail||'')}">`,naFields)}
         ${naWrap('clientAddress','Dirección',`<textarea name="clientAddress" rows="2">${escape(r.clientAddress||'')}</textarea>`,naFields)}
         ${naWrap('clientIdNumber','Nº de identidad',`<input name="clientIdNumber" value="${escape(r.clientIdNumber||'')}">`,naFields)}
 
@@ -313,7 +331,7 @@ const Views = (() => {
         ${naWrap('notes','Notas',`<textarea name="notes">${escape(r.notes||'')}</textarea>`,naFields)}
 
         <button type="submit" class="btn-primary" style="margin-top:8px">${existing?'Guardar cambios':'Registrar reparación'}</button>
-        <button type="button" class="btn-secondary btn-danger" id="cancelRepairBtn" style="margin-top:10px;color:#fff">
+        <button type="button" class="btn-primary btn-cancel" id="cancelRepairBtn" style="margin-top:10px">
           ${ICONS.cancel} Cancelar reparación
         </button>
       </form>
@@ -325,11 +343,15 @@ const Views = (() => {
       App.go(existing ? 'repairs' : 'dashboard');
     };
     // Cancelar reparación (abajo)
-    document.getElementById('cancelRepairBtn').onclick = ()=>{
-      const msg = existing
-        ? '¿Cancelar esta reparación? Se marcará como cancelada.'
-        : '¿Cancelar y salir? Se perderán los datos no guardados.';
-      if(!confirm(msg)) return;
+    document.getElementById('cancelRepairBtn').onclick = async ()=>{
+      const ok = await UI.confirmDialog({
+        title: existing ? 'Cancelar reparación' : 'Cancelar y salir',
+        message: existing
+          ? '¿Cancelar esta reparación? Se marcará como cancelada.'
+          : '¿Cancelar y salir? Se perderán los datos no guardados.',
+        okText:'Sí, cancelar', cancelText:'Volver', danger:true
+      });
+      if(!ok) return;
       try{ if(rec) rec.cancel(); }catch(e){}
       if(existing){
         DB.updateRepair(existing.id, { status: 'cancelled' });
@@ -483,7 +505,7 @@ const Views = (() => {
       const doSave = ()=>{
         const fd = new FormData(e.target);
         const data = {};
-        ['clientName','clientEmail','clientAddress','clientIdNumber','device','brand','model','serial','issue','status','notes'].forEach(k=>{
+        ['clientName','clientAddress','clientIdNumber','device','brand','model','serial','issue','status','notes'].forEach(k=>{
           const v = fd.get(k);
           data[k] = naFields.includes(k) ? null : (v != null ? String(v).trim() || null : null);
         });
@@ -544,10 +566,10 @@ const Views = (() => {
       phonesHtml = '<span class="muted">—</span>';
     } else {
       phonesHtml = `<div class="phones-display">${phones.map(p=>{
-        const tel = UI.phoneClean(p); const wa = UI.phoneWa(p);
+        const tel = UI.phoneClean(p); const sms = UI.phoneSms(p);
         return `<div style="display:flex;gap:6px">
           <a class="phone-link" href="tel:${escape(tel)}">${ICONS.phone}<span>${escape(p)}</span></a>
-          <a class="phone-link" href="https://wa.me/${escape(wa)}" target="_blank" rel="noopener" style="background:linear-gradient(135deg,rgba(76,201,115,.2),rgba(31,122,58,.15));border-color:rgba(76,201,115,.4);color:#a8e3b3">${ICONS.wa}</a>
+          <a class="phone-link sms" href="sms:${escape(sms)}">${ICONS.sms}<span>SMS</span></a>
         </div>`;
       }).join('')}</div>`;
     }
@@ -560,7 +582,6 @@ const Views = (() => {
       ${photos.length ? `<div class="detail-photo-strip">${photos.map((p,i)=>`<img src="${p}" data-view-idx="${i}">`).join('')}</div>` : ''}
 
       <div class="detail-row"><span class="lbl">Teléfono</span><span class="val">${phonesHtml}</span></div>
-      <div class="detail-row"><span class="lbl">Email</span><span class="val">${valHtml('clientEmail', v=>`<a href="mailto:${escape(v)}" class="link">${escape(v)}</a>`)}</span></div>
       <div class="detail-row"><span class="lbl">Dirección</span><span class="val">${valHtml('clientAddress')}</span></div>
       <div class="detail-row"><span class="lbl">Nº identidad</span><span class="val">${valHtml('clientIdNumber')}</span></div>
       <div class="detail-row"><span class="lbl">Marca</span><span class="val">${valHtml('brand')}</span></div>
@@ -581,9 +602,10 @@ const Views = (() => {
           ${['pending','in_progress','completed','delivered','cancelled'].map(s=>`<option value="${s}" ${r.status===s?'selected':''}>${statusLabel(s)||s}</option>`).join('')}
         </select>
       </div>
-      <div class="btn-row">
+      <div class="btn-row three">
         <button class="btn-secondary" id="editBtn">${ICONS.edit} Editar</button>
-        <button class="btn-primary btn-danger" id="delBtn">${ICONS.trash} Eliminar</button>
+        <button class="btn-secondary" id="ticketBtn">${ICONS.print} Ticket</button>
+        <button class="btn-primary btn-cancel" id="delBtn">${ICONS.trash} Eliminar</button>
       </div>
     `;
     UI.openModal(html);
@@ -599,11 +621,122 @@ const Views = (() => {
       UI.toast('Estado actualizado'); UI.closeModal(); App.refresh();
     });
     document.getElementById('editBtn').onclick = ()=>{ UI.closeModal(); App.go('new', null, r); };
-    document.getElementById('delBtn').onclick = ()=>{
-      if(confirm('¿Eliminar esta reparación?')){
-        DB.deleteRepair(id); UI.toast('Eliminada'); UI.closeModal(); App.refresh();
-      }
+    document.getElementById('ticketBtn').onclick = ()=>{ printTicket(r); };
+    document.getElementById('delBtn').onclick = async ()=>{
+      const ok = await UI.confirmDialog({
+        title:'Eliminar reparación',
+        message:`¿Eliminar definitivamente la reparación ${r.id}? Esta acción no se puede deshacer.`,
+        okText:'Eliminar', cancelText:'Cancelar', danger:true
+      });
+      if(!ok) return;
+      DB.deleteRepair(id); UI.toast('Eliminada'); UI.closeModal(); App.refresh();
     };
+  }
+
+  // ============= TICKET DE SALIDA =============
+  function printTicket(r){
+    const s = DB.settings;
+    const logo = s.logo
+      ? `<img src="${s.logo}" style="width:60px;height:60px;border-radius:12px;object-fit:cover">`
+      : `<div style="width:60px;height:60px;border-radius:12px;background:#7a1f1f;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:22px">${escape((s.appName||'T').charAt(0))}</div>`;
+    const phones = (r.clientPhones && r.clientPhones.length) ? r.clientPhones : (r.clientPhone?[r.clientPhone]:[]);
+    const total = r.price!=null ? Number(r.price) : null;
+    const dep = r.deposit!=null ? Number(r.deposit) : 0;
+    const saldo = total!=null ? (total - dep) : null;
+    const photosHtml = (r.devicePhotos||[]).slice(0,3).map(p=>
+      `<img src="${p}" style="width:80px;height:80px;object-fit:cover;border-radius:6px;border:1px solid #ddd">`
+    ).join('');
+    const html = `
+<!doctype html><html><head><meta charset="utf-8"><title>Ticket ${escape(r.id)}</title>
+<style>
+  *{box-sizing:border-box}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;margin:0;padding:24px;color:#111;background:#fff}
+  .ticket{max-width:560px;margin:0 auto;border:1px solid #ddd;border-radius:14px;padding:22px;background:#fff}
+  .head{display:flex;justify-content:space-between;align-items:center;gap:12px;border-bottom:2px dashed #ccc;padding-bottom:14px;margin-bottom:14px}
+  .brand{display:flex;align-items:center;gap:10px}
+  .brand h1{margin:0;font-size:20px;letter-spacing:.5px}
+  .brand p{margin:0;font-size:11px;color:#666;text-transform:uppercase;letter-spacing:1px}
+  .id-box{text-align:right}
+  .id-box .id{font-family:'Courier New',monospace;font-weight:800;font-size:22px;color:#7a1f1f;letter-spacing:1px}
+  .id-box .id-lbl{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#888}
+  h2{font-size:13px;text-transform:uppercase;letter-spacing:1.2px;color:#7a1f1f;margin:18px 0 6px;border-bottom:1px solid #eee;padding-bottom:4px}
+  .row{display:flex;justify-content:space-between;padding:4px 0;font-size:13px;gap:12px}
+  .row .l{color:#666}
+  .row .v{font-weight:600;text-align:right;max-width:65%}
+  .photos{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
+  .totals{margin-top:14px;background:#faf6f3;border:1px solid #eee;border-radius:10px;padding:12px}
+  .totals .row{padding:3px 0}
+  .totals .total{font-size:16px;font-weight:800;color:#7a1f1f;border-top:1px dashed #c5a98a;margin-top:6px;padding-top:6px}
+  .signs{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:30px}
+  .signs .box{border-top:1px solid #333;padding-top:6px;text-align:center;font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.8px}
+  .legal{margin-top:18px;font-size:10px;color:#888;line-height:1.5;text-align:center}
+  .actions{max-width:560px;margin:14px auto 0;display:flex;gap:8px;justify-content:flex-end}
+  button{padding:10px 16px;border-radius:8px;border:1px solid #ccc;background:#fff;cursor:pointer;font-weight:600}
+  button.primary{background:#7a1f1f;color:#fff;border-color:#7a1f1f}
+  @media print{ .actions{display:none} body{padding:0} .ticket{border:0} }
+</style></head>
+<body>
+  <div class="ticket" id="ticketPrintArea">
+    <div class="head">
+      <div class="brand">
+        ${logo}
+        <div>
+          <h1>${escape(s.appName||'Taller')}</h1>
+          <p>Comprobante de servicio</p>
+        </div>
+      </div>
+      <div class="id-box">
+        <div class="id-lbl">N.º Ticket</div>
+        <div class="id">#${escape(r.id)}</div>
+        <div class="id-lbl" style="margin-top:4px">${fmtDateTime(r.createdAt)}</div>
+      </div>
+    </div>
+
+    <h2>Cliente</h2>
+    <div class="row"><span class="l">Nombre</span><span class="v">${escape(r.clientName||'—')}</span></div>
+    ${phones.length?`<div class="row"><span class="l">Teléfono(s)</span><span class="v">${phones.map(escape).join(' · ')}</span></div>`:''}
+    ${r.clientAddress?`<div class="row"><span class="l">Dirección</span><span class="v">${escape(r.clientAddress)}</span></div>`:''}
+    ${r.clientIdNumber?`<div class="row"><span class="l">N.º identidad</span><span class="v">${escape(r.clientIdNumber)}</span></div>`:''}
+
+    <h2>Equipo</h2>
+    <div class="row"><span class="l">Equipo</span><span class="v">${escape(r.device||'—')}</span></div>
+    ${r.brand?`<div class="row"><span class="l">Marca</span><span class="v">${escape(r.brand)}</span></div>`:''}
+    ${r.model?`<div class="row"><span class="l">Modelo</span><span class="v">${escape(r.model)}</span></div>`:''}
+    ${r.serial?`<div class="row"><span class="l">N.º serie</span><span class="v">${escape(r.serial)}</span></div>`:''}
+    <div class="row"><span class="l">Estado</span><span class="v">${escape(statusLabel(r.status))}</span></div>
+    ${photosHtml?`<div class="photos">${photosHtml}</div>`:''}
+
+    <h2>Servicio</h2>
+    <div class="row"><span class="l">Falla reportada</span><span class="v">${escape(r.issue||'—')}</span></div>
+    ${r.notes?`<div class="row"><span class="l">Notas</span><span class="v">${escape(r.notes)}</span></div>`:''}
+    <div class="row"><span class="l">Ingreso</span><span class="v">${fmtDate(r.createdAt)}</span></div>
+    ${r.dueDate?`<div class="row"><span class="l">Entrega prevista</span><span class="v">${fmtDate(r.dueDate)}</span></div>`:''}
+
+    ${total!=null?`
+    <div class="totals">
+      <div class="row"><span class="l">Precio</span><span class="v">$ ${total.toFixed(2)}</span></div>
+      <div class="row"><span class="l">Anticipo</span><span class="v">$ ${dep.toFixed(2)}</span></div>
+      <div class="row total"><span class="l">Saldo a pagar</span><span class="v">$ ${saldo.toFixed(2)}</span></div>
+    </div>`:''}
+
+    <div class="signs">
+      <div class="box">Firma del técnico</div>
+      <div class="box">Firma del cliente</div>
+    </div>
+
+    <p class="legal">Conserve este comprobante. Es el único documento válido para reclamar su equipo.<br>
+    Identificador único: <b>${escape(r.id)}</b> · Generado: ${fmtDateTime(Date.now())}</p>
+  </div>
+
+  <div class="actions">
+    <button onclick="window.print()" class="primary">Imprimir</button>
+    <button onclick="window.close()">Cerrar</button>
+  </div>
+</body></html>`;
+    const w = window.open('', '_blank', 'width=720,height=900');
+    if(!w){ UI.toast('Habilita ventanas emergentes para ver el ticket'); return; }
+    w.document.write(html);
+    w.document.close();
   }
 
   // ============= BUSCAR =============
@@ -643,9 +776,25 @@ const Views = (() => {
 
       <div class="admin-card">
         <h3>Nombre del sistema</h3>
-        <p>La segunda palabra se mostrará en color marrón automáticamente.</p>
+        <p>La segunda palabra se mostrará en el color principal automáticamente.</p>
         <input id="appNameInput" class="input-pill" value="${escape(s.appName)}">
       </div>
+
+      <div class="admin-card">
+        <h3>Logo del sistema</h3>
+        <p>Sube una imagen (PNG/JPG/SVG). Se mostrará en el inicio de sesión y en la cabecera. Si no eliges ninguna se usa el logo por defecto.</p>
+        <div class="logo-upload">
+          <div class="logo-preview" id="logoPreview">${s.logo?`<img src="${s.logo}">`:'<svg viewBox="0 0 64 64"><g fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 55 L20 44"/><path d="M19 45 L28 36 L36 44 L27 53 Z" fill="currentColor" fill-opacity=".15"/><path d="M35 43 L46 32"/><path d="M45 33 L51 27 L55 31 L49 37 Z" fill="currentColor" fill-opacity=".25"/><path d="M53 29 L58 24" stroke-width="3.8"/><circle cx="59" cy="23" r="2" fill="currentColor" stroke="none"/><path d="M11 49 C 6 49 6 43 11 43 C 16 43 16 37 11 37" stroke-width="2.6"/><path d="M40 9 L50 9 L50 19 L40 19 Z"/><path d="M42 13 H 48" stroke-width="2.4"/><path d="M45 22 L45 27" stroke-width="2.6"/></g></svg>'}</div>
+          <div class="logo-actions">
+            <label class="btn-secondary" style="display:inline-flex;align-items:center;justify-content:center;gap:6px;cursor:pointer">
+              ${ICONS.upload}<span>Elegir imagen</span>
+              <input type="file" id="logoFile" accept="image/*" hidden>
+            </label>
+            <button class="btn-secondary" id="logoReset" ${s.logo?'':'disabled'}>${ICONS.trash} Restaurar por defecto</button>
+          </div>
+        </div>
+      </div>
+
 
       <div class="admin-card">
         <h3>Datos del creador (opcional)</h3>
@@ -748,6 +897,32 @@ const Views = (() => {
       DB.updateSettings({ appName: e.target.value.trim() || 'Taller' });
       App.applyBrand();
       UI.toast('Nombre actualizado');
+    });
+
+    // Logo
+    document.getElementById('logoFile').addEventListener('change', async e=>{
+      const f = e.target.files[0]; if(!f) return;
+      try{
+        // Resize a 256px máx, calidad alta — el logo queda pequeño y nítido
+        const dataUrl = await UI.resizeImage(f, 256, 0.92);
+        DB.updateSettings({ logo: dataUrl });
+        App.applyBrand();
+        admin(); // re-render para actualizar preview y botón
+        UI.toast('Logo actualizado');
+      }catch(err){ UI.toast('No se pudo procesar la imagen'); }
+    });
+    document.getElementById('logoReset').addEventListener('click', async ()=>{
+      if(!DB.settings.logo) return;
+      const ok = await UI.confirmDialog({
+        title:'Restaurar logo',
+        message:'¿Volver al logo por defecto?',
+        okText:'Restaurar', cancelText:'Cancelar'
+      });
+      if(!ok) return;
+      DB.updateSettings({ logo: null });
+      App.applyBrand();
+      admin();
+      UI.toast('Logo restaurado');
     });
     function saveCreator(){
       DB.updateCreator({

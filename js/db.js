@@ -1,7 +1,7 @@
 // Almacén con localStorage + migración compatible hacia adelante.
 const DB = (() => {
   const KEY = 'taller_db_v1';
-  const SCHEMA_VERSION = 5;
+  const SCHEMA_VERSION = 6;
   const DEFAULT_DEVICES = [
     'Televisor','Smart TV','Monitor','Laptop','PC de escritorio','Tablet',
     'Teléfono móvil','Impresora','Microondas','Lavadora','Refrigerador',
@@ -12,6 +12,7 @@ const DB = (() => {
     schemaVersion: SCHEMA_VERSION,
     settings: {
       appName: 'Taller',
+      logo: null, // dataURL personalizado del logo (si null, se usa el SVG por defecto)
       requirePassword: true,
       passwordHash: null,
       deviceTypes: DEFAULT_DEVICES.slice(),
@@ -77,6 +78,7 @@ const DB = (() => {
       changed = true;
     }
     if(!data.settings.creator){ data.settings.creator = { phone:'', whatsapp:'' }; changed = true; }
+    if(data.settings.logo === undefined){ data.settings.logo = null; changed = true; }
     data.schemaVersion = SCHEMA_VERSION;
     if(changed) save(false);
   }

@@ -23,6 +23,12 @@ const App = (() => {
   </g>
 </svg>`.trim();
 
+  function logoHtml(){
+    const custom = DB.settings.logo;
+    if(custom) return `<img src="${custom}" alt="logo">`;
+    return BRAND_LOGO_SVG;
+  }
+
   function applyBrand(){
     const name = DB.settings.appName || 'Taller';
     const html = UI.renderBrand(name);
@@ -32,10 +38,11 @@ const App = (() => {
     if(login) login.innerHTML = html;
     document.title = name;
     // logos
+    const lh = logoHtml();
     const al = document.getElementById('appLogo');
     const ll = document.getElementById('loginLogo');
-    if(al) al.innerHTML = BRAND_LOGO_SVG;
-    if(ll) ll.innerHTML = BRAND_LOGO_SVG;
+    if(al) al.innerHTML = lh;
+    if(ll) ll.innerHTML = lh;
     // creator contacts
     renderCreatorChips();
   }

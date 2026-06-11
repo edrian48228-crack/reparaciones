@@ -39,9 +39,35 @@ const UI = (() => {
     if(parts.length < 2) return escape(parts[0]||'');
     return `${escape(parts[0])} <span class="w2">${escape(parts.slice(1).join(' '))}</span>`;
   }
-  // Limpia un número para tel:/wa.me
+  // Limpia un número para tel:/sms:/wa.me
   function phoneClean(p){ return String(p||'').replace(/[^\d+]/g,''); }
   function phoneWa(p){ return String(p||'').replace(/\D/g,''); }
+  function phoneSms(p){ return String(p||'').replace(/[^\d+]/g,''); }
+
+  // Confirmación elegante (Promise<boolean>)
+  function confirmDialog({title='¿Confirmar?', message='', okText='Aceptar', cancelText='Cancelar', danger=false}={}){
+    return new Promise(resolve=>{
+      const wrap = document.createElement('div');
+      wrap.className = 'confirm-overlay';
+      wrap.innerHTML = `
+        <div class="confirm-card" role="dialog" aria-modal="true">
+          <h3>${escape(title)}</h3>
+          <p>${escape(message)}</p>
+          <div class="btn-row">
+            <button class="btn-secondary" data-act="cancel">${escape(cancelText)}</button>
+            <button class="btn-primary ${danger?'btn-cancel':''}" data-act="ok">${escape(okText)}</button>
+          </div>
+        </div>`;
+      document.body.appendChild(wrap);
+      function close(v){ wrap.remove(); resolve(v); }
+      wrap.addEventListener('click', e=>{
+        if(e.target===wrap) close(false);
+        const act = e.target.closest('[data-act]')?.dataset.act;
+        if(act==='ok') close(true);
+        if(act==='cancel') close(false);
+      });
+    });
+  }
 
   function capitalizeWords(str){
     if(!str) return '';
@@ -202,5 +228,5 @@ const UI = (() => {
       isRecording(){ return mediaRec && mediaRec.state==='recording'; }
     };
   }
-  return { $, toast, openModal, closeModal, escape, fmtDate, fmtDateTime, fmtDateInput, statusLabel, resizeImage, blobToDataUrl, createRecorder, capitalizeWords, attachAutoCapitalize, openImageViewer, renderBrand, phoneClean, phoneWa };
+  return { $, toast, openModal, closeModal, escape, fmtDate, fmtDateTime, fmtDateInput, statusLabel, resizeImage, blobToDataUrl, createRecorder, capitalizeWords, attachAutoCapitalize, openImageViewer, renderBrand, phoneClean, phoneWa, phoneSms, confirmDialog };
 })();
