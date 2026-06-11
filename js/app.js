@@ -2,48 +2,38 @@ const App = (() => {
   let current = 'dashboard';
   let currentArg = null;
 
-  // SVG logo por defecto: llave inglesa + destornillador cruzados (más limpio)
+  // SVG logo por defecto: llave + destornillador cruzados
   const BRAND_LOGO_SVG = `
 <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <linearGradient id="lgA" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#ffffff" stop-opacity=".95"/>
-      <stop offset="1" stop-color="#ffffff" stop-opacity=".75"/>
-    </linearGradient>
-  </defs>
-  <g fill="none" stroke="url(#lgA)" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round">
-    <!-- Llave inglesa -->
+  <g fill="none" stroke="currentColor" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round">
     <path d="M14 50 L36 28" />
     <path d="M12 52 a4 4 0 1 1 5 -5" />
-    <path d="M40 24 a8 8 0 1 0 -10 -10 l5 5 -3 3 -5 -5 a8 8 0 0 0 10 10 z" fill="url(#lgA)" fill-opacity=".18"/>
-    <!-- Destornillador cruzado -->
+    <path d="M40 24 a8 8 0 1 0 -10 -10 l5 5 -3 3 -5 -5 a8 8 0 0 0 10 10 z" fill="currentColor" fill-opacity=".18"/>
     <path d="M50 14 L30 34" />
-    <path d="M52 12 l4 4 -4 4 -4 -4 z" fill="url(#lgA)" fill-opacity=".25"/>
-    <path d="M30 34 L26 38 L22 34 L26 30 Z" fill="url(#lgA)" fill-opacity=".25"/>
+    <path d="M52 12 l4 4 -4 4 -4 -4 z" fill="currentColor" fill-opacity=".25"/>
+    <path d="M30 34 L26 38 L22 34 L26 30 Z" fill="currentColor" fill-opacity=".25"/>
   </g>
 </svg>`.trim();
 
-  // Presets de logos (iconos intuitivos de taller)
   const LOGO_PRESETS = [
     { key:'tools', name:'Herramientas', svg: BRAND_LOGO_SVG },
-    { key:'gear',  name:'Engranaje', svg: `
+    { key:'gear', name:'Engranaje', svg: `
 <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
-  <g fill="currentColor">
-    <path d="M32 20a12 12 0 1 0 0 24 12 12 0 0 0 0-24zm0 18a6 6 0 1 1 0-12 6 6 0 0 1 0 12z"/>
-    <path d="M55 32l-3.7-2.1.6-4.2-4.1-1.1-1.5-4-4.2.3-3-3-3.4 2.5L32 19l-3.7-1.6-3.4-2.5-3 3-4.2-.3-1.5 4-4.1 1.1.6 4.2L9 32l3.7 2.1-.6 4.2 4.1 1.1 1.5 4 4.2-.3 3 3 3.4-2.5L32 45l3.7 1.6 3.4 2.5 3-3 4.2.3 1.5-4 4.1-1.1-.6-4.2z" fill="none" stroke="currentColor" stroke-width="2"/>
+  <g fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M32 6v6 M32 52v6 M6 32h6 M52 32h6 M14 14l4 4 M46 46l4 4 M14 50l4-4 M46 18l4-4" />
+    <circle cx="32" cy="32" r="14" fill="currentColor" fill-opacity=".15"/>
+    <circle cx="32" cy="32" r="5" fill="currentColor"/>
   </g>
 </svg>`.trim() },
     { key:'wrench', name:'Llave', svg: `
 <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
-  <g fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M44 8a12 12 0 0 0-11 16L10 47a4 4 0 0 0 0 6l1 1a4 4 0 0 0 6 0l23-23a12 12 0 0 0 14-15l-7 7-6-1-1-6z" fill="currentColor" fill-opacity=".18"/>
-  </g>
+  <path d="M44 8a12 12 0 0 0-11 16L10 47a4 4 0 0 0 0 6l1 1a4 4 0 0 0 6 0l23-23a12 12 0 0 0 14-15l-7 7-6-1-1-6z" fill="currentColor" fill-opacity=".22" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/>
 </svg>`.trim() },
     { key:'circuit', name:'Circuito', svg: `
 <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
   <g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-    <rect x="14" y="14" width="36" height="36" rx="4" fill="currentColor" fill-opacity=".08"/>
-    <path d="M22 22h8v8h-8z M34 22h8M34 30h8M22 38h20M22 46h8M34 46h8"/>
+    <rect x="14" y="14" width="36" height="36" rx="4" fill="currentColor" fill-opacity=".1"/>
+    <path d="M22 22h8v8h-8z M34 22h8 M34 30h8 M22 38h20 M22 46h8 M34 46h8"/>
     <circle cx="42" cy="22" r="2.4" fill="currentColor"/>
     <circle cx="42" cy="30" r="2.4" fill="currentColor"/>
     <circle cx="30" cy="46" r="2.4" fill="currentColor"/>
@@ -56,7 +46,7 @@ const App = (() => {
     { key:'screwdriver', name:'Destornillador', svg: `
 <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
   <g fill="none" stroke="currentColor" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M44 6 L58 20 L40 38 L26 24 z" fill="currentColor" fill-opacity=".2"/>
+    <path d="M44 6 L58 20 L40 38 L26 24 z" fill="currentColor" fill-opacity=".22"/>
     <path d="M26 24 L8 42 a4 4 0 0 0 0 6 l8 8 a4 4 0 0 0 6 0 L40 38" />
   </g>
 </svg>`.trim() }

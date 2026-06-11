@@ -74,7 +74,8 @@ const Views = (() => {
       }
     }
     const delBtn = `<button class="mini-action delete" data-del-id="${escape(r.id)}" data-stop="1" title="Eliminar reparación" aria-label="Eliminar">${ICONS.trash}</button>`;
-    const actionsRow = `<div class="card-phones bottom-row">${phoneHtml ? phoneHtml.replace(/^<div class="card-phones">/,'').replace(/<\/div>$/,'') : ''}${delBtn}</div>`;
+    const inner = phoneHtml ? phoneHtml.replace(/^<div class="card-phones">/,'').replace(/<\/div>\s*$/,'') : '';
+    const actionsRow = `<div class="card-phones bottom-row">${inner}${delBtn}</div>`;
     return `
       <div class="repair-card" data-id="${r.id}">
         <div class="thumb">${thumb}</div>
@@ -502,9 +503,8 @@ const Views = (() => {
     // Submit
     document.getElementById('repairForm').addEventListener('submit', e=>{
       e.preventDefault();
-      // Capturamos FormData antes de chequeos asíncronos
-      const fd_pre = new FormData(e.target);
       const doSave = async ()=>{
+        let fd_pre = new FormData(e.target);
         if(!existing){
           const idn = (fd_pre.get('clientIdNumber')||'').trim();
           if(idn && !naFields.includes('clientIdNumber')){
@@ -512,22 +512,23 @@ const Views = (() => {
             if(dup){
               const ok = await UI.confirmDialog({
                 title:'Cliente ya existe',
-                message:`Ya existe un cliente con la identidad ${idn} (${dup.clientName||'sin nombre'}). ¿Crear otra reparación para el mismo cliente? Se usarán sus datos para evitar duplicados.`,
+                message:`Ya existe un cliente con la identidad ${idn} (${dup.clientName||'sin nombre'}). ¿Crear otra reparación para el mismo cliente? Se usarán sus datos para no duplicar información.`,
                 okText:'Sí, usar mismo cliente', cancelText:'Cancelar'
               });
               if(!ok) return;
-              // Forzar datos del cliente existente
               const cn = document.getElementById('clientNameInput');
               if(cn && !cn.value.trim()) cn.value = dup.clientName||'';
+              const addrEl = document.querySelector('[name=clientAddress]');
+              if(addrEl && !addrEl.value.trim() && dup.clientAddress) addrEl.value = dup.clientAddress;
               if(!photos.client && dup.clientPhoto) photos.client = dup.clientPhoto;
               if((!phones.length || phones.every(x=>!x)) && (dup.clientPhones||[]).length){
                 phones.length = 0; (dup.clientPhones||[]).forEach(x=>phones.push(x));
               }
-              if(dup.clientAddress && !document.querySelector("[name=clientAddress]").value.trim()) document.querySelector("[name=clientAddress]").value = dup.clientAddress;
+              fd_pre = new FormData(e.target);
             }
           }
         }
-        const fd = new FormData(e.target);
+        const fd = fd_pre;
         const data = {};
         ['clientName','clientAddress','clientIdNumber','device','brand','model','serial','issue','status','notes'].forEach(k=>{
           const v = fd.get(k);
@@ -628,7 +629,7 @@ const Views = (() => {
       </div>
       <div class="btn-row three">
         <button class="btn-secondary" id="editBtn">${ICONS.edit} Editar</button>
-        <button class="btn-secondary" id="ticketBtn">${ICONS.print} Ticket</button>
+        <button class="btn-secondary" id="ticketBtn">${ICONS.print} Etiqueta</button>
         <button class="btn-primary btn-cancel" id="delBtn">${ICONS.trash} Eliminar</button>
       </div>
     `;
@@ -645,7 +646,7 @@ const Views = (() => {
       UI.toast('Estado actualizado'); UI.closeModal(); App.refresh();
     });
     document.getElementById('editBtn').onclick = ()=>{ UI.closeModal(); App.go('new', null, r); };
-    document.getElementById('ticketBtn').onclick = ()=>{ printTicket(r); };
+    document.getElementById('ticketBtn').onclick = ()=>{ showLabel(r); };
     document.getElementById('delBtn').onclick = async ()=>{
       const ok = await UI.confirmDialog({
         title:'Eliminar reparación',
@@ -657,7 +658,40 @@ const Views = (() => {
     };
   }
 
-  // ============= TICKET DE SALIDA =============
+  // ============= ETIQUETA INTERNA (rápida, sin imprimir) =============
+  function showLabel(r){
+    const phones = (r.clientPhones && r.clientPhones.length) ? r.clientPhones : (r.clientPhone?[r.clientPhone]:[]);
+    const pieces = [
+      ['ID', r.id],
+      ['Cliente', r.clientName||'—'],
+      ['Tel', phones.join(' / ') || '—'],
+      ['Equipo', [r.device, r.brand, r.model].filter(Boolean).join(' ') || '—'],
+      ['Serie', r.serial || '—'],
+      ['Falla', r.issue || '—'],
+      ['Entrega', r.dueDate ? fmtDate(r.dueDate) : '—']
+    ];
+    const rows = pieces.map(([k,vv])=>`<div class="lbl-row"><span class="k">${escape(k)}</span><span class="v">${escape(vv)}</span></div>`).join('');
+    const plain = pieces.map(([k,vv])=> `${k}: ${vv}`).join('\n');
+    UI.openModal(`
+      <h2 style="margin:0 0 4px;font-size:18px">Etiqueta del equipo</h2>
+      <p class="muted small" style="margin:0 0 12px">Datos rápidos para pegar detrás del aparato.</p>
+      <div class="label-card" id="labelCard">
+        <div class="lbl-id">${escape(r.id)}</div>
+        ${rows}
+      </div>
+      <div class="btn-row" style="margin-top:14px">
+        <button class="btn-secondary" id="copyLbl">Copiar texto</button>
+        <button class="btn-secondary" id="closeLbl">Cerrar</button>
+      </div>
+    `);
+    document.getElementById('closeLbl').onclick = ()=> UI.closeModal();
+    document.getElementById('copyLbl').onclick = async ()=>{
+      try{ await navigator.clipboard.writeText(plain); UI.toast('Copiado al portapapeles'); }
+      catch(e){ UI.toast('No se pudo copiar'); }
+    };
+  }
+
+  // ============= TICKET DE SALIDA (legacy) =============
   function printTicket(r){
     const s = DB.settings;
     const logo = s.logo
@@ -808,7 +842,7 @@ const Views = (() => {
         <h3>Logo del sistema</h3>
         <p>Sube una imagen (PNG/JPG/SVG). Se mostrará en el inicio de sesión y en la cabecera. Si no eliges ninguna se usa el logo por defecto.</p>
         <div class="logo-upload">
-          <div class="logo-preview" id="logoPreview">${App.getPresets ? (s.logo?`<img src="${s.logo}">`:(App.getPresets().find(x=>x.key===(s.logoPreset||'tools'))||App.getPresets()[0]).svg) : ''}</div>
+          <div class="logo-preview" id="logoPreview">${s.logo?`<img src="${s.logo}">`:((App.getPresets&&App.getPresets().find(x=>x.key===(s.logoPreset||'tools')))||{svg:''}).svg}</div>
           <div class="logo-actions">
             <label class="btn-secondary btn-iconlbl">
               ${ICONS.upload}<span>Elegir imagen</span>
@@ -817,8 +851,9 @@ const Views = (() => {
             <button class="btn-secondary btn-iconlbl" id="logoReset">${ICONS.trash}<span>Restaurar por defecto</span></button>
           </div>
         </div>
-        <div class="preset-grid" id="presetGrid">
-          ${(App.getPresets ? App.getPresets() : []).map(p=>`
+        <p class="muted small" style="margin:14px 0 6px">O elige un icono por defecto:</p>
+        <div class="preset-grid">
+          ${(App.getPresets?App.getPresets():[]).map(p=>`
             <button type="button" class="preset-tile ${(!s.logo && (s.logoPreset||'tools')===p.key)?'active':''}" data-preset="${escape(p.key)}" title="${escape(p.name)}">
               <div class="preset-thumb">${p.svg}</div>
               <span>${escape(p.name)}</span>
@@ -920,7 +955,7 @@ const Views = (() => {
 
       <div class="admin-card">
         <h3>Estadísticas de ganancias</h3>
-        <p>Calculadas sobre reparaciones <b>entregadas</b>. El saldo pendiente suma las que aún no se entregaron.</p>
+        <p>Calculadas sobre reparaciones <b>entregadas</b>. El saldo pendiente suma lo que aún no se ha cobrado.</p>
         ${(()=>{ 
           const now=new Date(); const t0=new Date(now); t0.setHours(0,0,0,0);
           const wd=(t0.getDay()+6)%7; const w0=new Date(t0); w0.setDate(w0.getDate()-wd);
@@ -982,16 +1017,12 @@ const Views = (() => {
       });
       if(!ok) return;
       DB.updateSettings({ logo: null, logoPreset: 'tools' });
-      App.applyBrand();
-      admin();
-      UI.toast('Logo restaurado');
+      App.applyBrand(); admin(); UI.toast('Logo restaurado');
     });
     document.querySelectorAll('[data-preset]').forEach(b=>{
       b.onclick = ()=>{
         DB.updateSettings({ logo: null, logoPreset: b.dataset.preset });
-        App.applyBrand();
-        admin();
-        UI.toast('Logo actualizado');
+        App.applyBrand(); admin(); UI.toast('Logo actualizado');
       };
     });
     function saveCreator(){
@@ -1083,5 +1114,5 @@ const Views = (() => {
     });
   }
 
-  return { dashboard, repairsList, newRepair, search, admin, showRepair };
+  return { dashboard, repairsList, newRepair, search, admin, showRepair, showLabel };
 })();

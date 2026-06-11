@@ -617,117 +617,84 @@ main{padding:96px 16px 110px;max-width:720px;margin:0 auto;width:100%}
   width:100%;height:100%;object-fit:cover;border-radius:inherit;display:block
 }
 
-/* === OVERRIDES (v7) === */
-:root{ --gold:#e8c46a; --gold-glow:#ffd87a; }
 
-/* Corona y nombre del creador en dorado, con brillo destacado */
-.crown{
-  fill: var(--gold) !important;
-  filter: drop-shadow(0 0 6px rgba(232,196,106,.7));
-  width:16px;height:16px
-}
-.creator-left b{
-  color: var(--gold-glow) !important;
-  text-shadow: 0 0 10px rgba(255,216,122,.55), 0 0 2px rgba(0,0,0,.6);
-  letter-spacing:.3px;
-  font-weight:800
-}
+/* === OVERRIDES v8 === */
+:root{ --gold:#e8c46a; --gold-glow:#ffd87a; }
+.crown{ fill: var(--gold) !important; filter: drop-shadow(0 0 6px rgba(232,196,106,.7)); width:16px; height:16px }
+.creator-left b{ color: var(--gold-glow) !important; text-shadow: 0 0 10px rgba(255,216,122,.55), 0 0 2px rgba(0,0,0,.6); font-weight:800 }
 .credit{ color:#d8c89a }
 .credit b{ color: var(--gold-glow); text-shadow:0 0 8px rgba(255,216,122,.5) }
 
-/* Botones primarios — menos padding vertical */
 .btn-primary{ padding:11px 14px }
 .btn-primary.btn-cancel{ padding:11px 14px }
 
-/* Eliminar reparación en la parte inferior derecha junto a SMS */
-.card-delete{ display:none !important } /* desactivar el viejo superior */
-.repair-info .card-phones.bottom-row{
-  justify-content:flex-start;
-  align-items:center
-}
+.card-delete{ display:none !important }
+.repair-info .card-phones.bottom-row{ justify-content:flex-start; align-items:center }
 .repair-info .card-phones .mini-action.delete{
-  margin-left:auto;
-  color:#ff9b9b;
-  border-color:rgba(155,42,42,.4);
-  background:rgba(155,42,42,.12);
-  padding:4px 8px;
-  cursor:pointer
+  margin-left:auto; color:#ff9b9b; border-color:rgba(155,42,42,.4);
+  background:rgba(155,42,42,.12); padding:4px 8px; cursor:pointer
 }
-.repair-info .card-phones .mini-action.delete svg{width:13px;height:13px;fill:currentColor}
-.repair-info .card-phones .mini-action.delete:hover{
-  background:rgba(155,42,42,.3); color:#fff
-}
+.repair-info .card-phones .mini-action.delete svg{ width:13px; height:13px; fill:currentColor }
+.repair-info .card-phones .mini-action.delete:hover{ background:rgba(155,42,42,.3); color:#fff }
 
-/* Logo: alinear icono+texto en una sola línea (fix Restaurar) */
-.btn-iconlbl{
-  display:inline-flex !important;
-  align-items:center !important;
-  justify-content:center !important;
-  gap:6px;
-  cursor:pointer;
-  width:auto !important
-}
+.btn-iconlbl{ display:inline-flex !important; align-items:center !important; justify-content:center !important; gap:6px; cursor:pointer; width:auto !important }
 .btn-iconlbl .ico{ width:18px; height:18px; display:inline-block }
 .btn-iconlbl > span{ line-height:1 }
 
-/* Grid de presets de logo */
-.preset-grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fill, minmax(86px, 1fr));
-  gap:10px;
-  margin-top:14px
-}
+.preset-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(86px, 1fr)); gap:10px }
 .preset-tile{
   display:flex; flex-direction:column; align-items:center; gap:6px;
-  padding:10px 6px;
-  background:var(--surface-2);
-  border:1px solid var(--border);
-  border-radius:14px;
-  color:var(--muted);
-  cursor:pointer;
-  transition:all .15s
+  padding:10px 6px; background:var(--surface-2); border:1px solid var(--border);
+  border-radius:14px; color:var(--muted); cursor:pointer; transition:all .15s
 }
 .preset-tile:hover{ color:var(--text); border-color:var(--primary-glow) }
 .preset-tile.active{
   border-color:var(--gold);
   background:linear-gradient(135deg, rgba(232,196,106,.12), rgba(122,31,31,.18));
-  color:#fff;
-  box-shadow:0 0 0 1px rgba(232,196,106,.35), 0 6px 18px rgba(232,196,106,.18)
+  color:#fff; box-shadow:0 0 0 1px rgba(232,196,106,.35), 0 6px 18px rgba(232,196,106,.18)
 }
 .preset-thumb{
   width:48px; height:48px; border-radius:12px;
   background:linear-gradient(135deg,var(--primary-glow),var(--primary-2));
-  display:flex;align-items:center;justify-content:center;color:#fff
+  display:flex; align-items:center; justify-content:center; color:#fff
 }
 .preset-thumb svg{ width:32px; height:32px; color:#fff; fill:currentColor }
 .preset-tile span{ font-size:11px; font-weight:600; letter-spacing:.2px }
 
-/* Earnings grid */
-.earn-grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit, minmax(140px, 1fr));
-  gap:10px;
-  margin-top:10px
-}
+.earn-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:10px; margin-top:10px }
 .earn-tile{
   display:flex; flex-direction:column; gap:4px;
-  padding:12px 14px;
-  background:var(--surface-2);
-  border:1px solid var(--border);
-  border-radius:14px
+  padding:12px 14px; background:var(--surface-2);
+  border:1px solid var(--border); border-radius:14px
 }
-.earn-tile .el{
-  font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;font-weight:600
-}
-.earn-tile .ev{
-  font-size:18px;font-weight:800;color:#fff
-}
+.earn-tile .el{ font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.6px; font-weight:600 }
+.earn-tile .ev{ font-size:18px; font-weight:800; color:#fff }
 .earn-tile.gold{
   border-color:rgba(232,196,106,.45);
   background:linear-gradient(135deg, rgba(232,196,106,.12), rgba(122,31,31,.18))
 }
 .earn-tile.gold .ev{ color:var(--gold-glow); text-shadow:0 0 12px rgba(255,216,122,.4) }
-.earn-tile.pending{
-  border-color:rgba(255,123,107,.35)
-}
+.earn-tile.pending{ border-color:rgba(255,123,107,.35) }
 .earn-tile.pending .ev{ color:#ff9b8b }
+
+/* Etiqueta interna */
+.label-card{
+  background:linear-gradient(160deg, #1f1812, #161616);
+  border:1px solid var(--gold);
+  border-radius:16px; padding:16px;
+  box-shadow:0 0 0 1px rgba(232,196,106,.18), 0 12px 30px rgba(0,0,0,.5)
+}
+.label-card .lbl-id{
+  font-family:'Courier New', monospace; font-weight:800; font-size:26px;
+  color:var(--gold-glow); letter-spacing:2px; text-align:center;
+  padding-bottom:10px; margin-bottom:10px;
+  border-bottom:1px dashed rgba(232,196,106,.4);
+  text-shadow:0 0 12px rgba(255,216,122,.5)
+}
+.label-card .lbl-row{
+  display:grid; grid-template-columns:78px 1fr; gap:8px;
+  padding:6px 0; font-size:14px; border-bottom:1px dashed rgba(255,255,255,.06)
+}
+.label-card .lbl-row:last-child{ border-bottom:0 }
+.label-card .lbl-row .k{ color:var(--muted); text-transform:uppercase; letter-spacing:.5px; font-size:11px; font-weight:700; align-self:center }
+.label-card .lbl-row .v{ color:#fff; font-weight:600; word-break:break-word }

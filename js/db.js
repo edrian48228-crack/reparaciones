@@ -12,7 +12,7 @@ const DB = (() => {
     schemaVersion: SCHEMA_VERSION,
     settings: {
       appName: 'Taller',
-      logo: null, // dataURL personalizado del logo (si null, se usa preset)
+      logo: null,
       logoPreset: 'tools',
       requirePassword: true,
       passwordHash: null,
