@@ -111,6 +111,8 @@ const App = (() => {
     if(v==='dashboard') Views.dashboard();
     else if(v==='repairs') Views.repairsList(arg);
     else if(v==='new') Views.newRepair(extra);
+    else if(v==='sales') Views.sales(arg);
+    else if(v==='chooser') Views.newChooser();
     else if(v==='search') Views.search();
     else if(v==='admin') Views.admin();
     window.scrollTo(0,0);
@@ -132,8 +134,14 @@ const App = (() => {
       if(e.target.id==='modal') UI.closeModal();
     });
     document.querySelectorAll('.tab').forEach(t=>{
-      t.addEventListener('click', ()=> go(t.dataset.view));
+      t.addEventListener('click', ()=>{
+        const v = t.dataset.view;
+        if(v==='chooser'){ Views.newChooser(); return; }
+        go(v);
+      });
     });
+    const sb = document.getElementById('headerSearchBtn');
+    if(sb) sb.addEventListener('click', ()=> go('search'));
     if(Auth.isLoggedIn()) showApp();
     else {
       if(!DB.settings.passwordHash){
