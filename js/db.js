@@ -1,7 +1,7 @@
 // Almacén con localStorage + migración compatible hacia adelante.
 const DB = (() => {
   const KEY = 'taller_db_v1';
-  const SCHEMA_VERSION = 3;
+  const SCHEMA_VERSION = 4;
   const DEFAULT_DEVICES = [
     'Televisor','Smart TV','Monitor','Laptop','PC de escritorio','Tablet',
     'Teléfono móvil','Impresora','Microondas','Lavadora','Refrigerador',
@@ -53,6 +53,7 @@ const DB = (() => {
   }
   function migrate(){
     // v1 -> v2+: devicePhoto (string) -> devicePhotos (array)
+    // v3 -> v4: clientPhone (string) -> clientPhones (array)
     let changed = false;
     for(const r of data.repairs){
       if(r.devicePhoto && !r.devicePhotos){
@@ -61,8 +62,15 @@ const DB = (() => {
       }
       if(!r.devicePhotos) r.devicePhotos = [];
       if(!r.naFields) r.naFields = [];
+      if(!Array.isArray(r.clientPhones)){
+        r.clientPhones = r.clientPhone ? [r.clientPhone] : [];
+        changed = true;
+      }
+      if(r.clientAddress === undefined) r.clientAddress = null;
+      if(r.clientIdNumber === undefined) r.clientIdNumber = null;
+      // Migra estado obsoleto "awaiting" -> "in_progress"
+      if(r.status === 'awaiting'){ r.status = 'in_progress'; changed = true; }
     }
-    // Lista de equipos: si quedó vacía, restaurar predeterminada
     if(!Array.isArray(data.settings.deviceTypes) || !data.settings.deviceTypes.length){
       data.settings.deviceTypes = DEFAULT_DEVICES.slice();
       changed = true;
@@ -143,14 +151,18 @@ const DB = (() => {
     search(q){
       q = (q||'').toLowerCase().trim();
       if(!q) return data.repairs;
-      return data.repairs.filter(r =>
-        (r.clientName||'').toLowerCase().includes(q) ||
-        (r.clientPhone||'').toLowerCase().includes(q) ||
-        (r.device||'').toLowerCase().includes(q) ||
-        (r.brand||'').toLowerCase().includes(q) ||
-        (r.id||'').toLowerCase().includes(q) ||
-        (r.issue||'').toLowerCase().includes(q)
-      );
+      return data.repairs.filter(r => {
+        const phones = (r.clientPhones||[]).join(' ');
+        return (r.clientName||'').toLowerCase().includes(q) ||
+          phones.toLowerCase().includes(q) ||
+          (r.clientPhone||'').toLowerCase().includes(q) ||
+          (r.clientAddress||'').toLowerCase().includes(q) ||
+          (r.clientIdNumber||'').toLowerCase().includes(q) ||
+          (r.device||'').toLowerCase().includes(q) ||
+          (r.brand||'').toLowerCase().includes(q) ||
+          (r.id||'').toLowerCase().includes(q) ||
+          (r.issue||'').toLowerCase().includes(q);
+      });
     },
     byStatus(s){ return data.repairs.filter(r=>r.status===s); },
     todayPending(){

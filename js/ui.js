@@ -33,6 +33,65 @@ const UI = (() => {
       awaiting:'Esperando recogida', completed:'Completada', delivered:'Entregada'
     })[s] || s;
   }
+  // Capitaliza la primera letra de cada palabra (al escribir)
+  function capitalizeWords(str){
+    if(!str) return '';
+    return str.replace(/(^|\s)([\p{L}])/gu, (_,sp,ch)=> sp + ch.toLocaleUpperCase('es'));
+  }
+  function attachAutoCapitalize(input){
+    if(!input) return;
+    input.setAttribute('autocapitalize','words');
+    input.addEventListener('input', ()=>{
+      const start = input.selectionStart;
+      const newVal = capitalizeWords(input.value);
+      if(newVal !== input.value){
+        input.value = newVal;
+        try{ input.setSelectionRange(start, start); }catch(e){}
+      }
+    });
+  }
+  // Visor de imágenes (lightbox)
+  function openImageViewer(srcs, index=0){
+    if(typeof srcs === 'string') srcs = [srcs];
+    if(!srcs || !srcs.length) return;
+    let i = Math.max(0, Math.min(index, srcs.length-1));
+    let el = document.getElementById('imgViewer');
+    if(!el){
+      el = document.createElement('div');
+      el.id = 'imgViewer';
+      el.className = 'img-viewer';
+      el.innerHTML = `
+        <button class="iv-close" aria-label="Cerrar">&times;</button>
+        <button class="iv-prev" aria-label="Anterior">&#10094;</button>
+        <img class="iv-img" alt="">
+        <button class="iv-next" aria-label="Siguiente">&#10095;</button>
+        <div class="iv-count"></div>`;
+      document.body.appendChild(el);
+      el.addEventListener('click', e=>{
+        if(e.target===el || e.target.classList.contains('iv-close')) close();
+      });
+      el.querySelector('.iv-prev').onclick = ()=> show(i-1);
+      el.querySelector('.iv-next').onclick = ()=> show(i+1);
+      document.addEventListener('keydown', e=>{
+        if(el.classList.contains('open')){
+          if(e.key==='Escape') close();
+          if(e.key==='ArrowLeft') show(i-1);
+          if(e.key==='ArrowRight') show(i+1);
+        }
+      });
+    }
+    function show(n){
+      i = (n + srcs.length) % srcs.length;
+      el.querySelector('.iv-img').src = srcs[i];
+      el.querySelector('.iv-count').textContent = srcs.length>1 ? `${i+1} / ${srcs.length}` : '';
+      el.querySelector('.iv-prev').style.display = srcs.length>1 ? '' : 'none';
+      el.querySelector('.iv-next').style.display = srcs.length>1 ? '' : 'none';
+    }
+    function close(){ el.classList.remove('open'); }
+    el._srcs = srcs;
+    show(i);
+    el.classList.add('open');
+  }
   async function resizeImage(file, maxDim=900, quality=.72){
     return new Promise((resolve,reject)=>{
       const reader = new FileReader();
@@ -93,5 +152,5 @@ const UI = (() => {
       }
     };
   }
-  return { $, toast, openModal, closeModal, escape, fmtDate, fmtDateTime, fmtDateInput, statusLabel, resizeImage, blobToDataUrl, createRecorder };
+  return { $, toast, openModal, closeModal, escape, fmtDate, fmtDateTime, fmtDateInput, statusLabel, resizeImage, blobToDataUrl, createRecorder, capitalizeWords, attachAutoCapitalize, openImageViewer };
 })();
