@@ -2,32 +2,75 @@ const App = (() => {
   let current = 'dashboard';
   let currentArg = null;
 
-  // SVG logo: cautín + multímetro estilizado, grueso, sin fondo
+  // SVG logo por defecto: llave inglesa + destornillador cruzados (más limpio)
   const BRAND_LOGO_SVG = `
 <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
-  <g fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round">
-    <!-- Cautín (soldador) -->
-    <path d="M9 55 L20 44" />
-    <path d="M19 45 L28 36 L36 44 L27 53 Z" fill="currentColor" fill-opacity=".15"/>
-    <path d="M35 43 L46 32" />
-    <path d="M45 33 L51 27 L55 31 L49 37 Z" fill="currentColor" fill-opacity=".25"/>
-    <!-- Punta caliente -->
-    <path d="M53 29 L58 24" stroke-width="3.8"/>
-    <circle cx="59" cy="23" r="2" fill="currentColor" stroke="none"/>
-    <!-- Cable rizado -->
-    <path d="M11 49 C 6 49 6 43 11 43 C 16 43 16 37 11 37" stroke-width="2.6"/>
-    <!-- Multímetro / destornillador en cruz arriba -->
-    <path d="M40 9 L50 9 L50 19 L40 19 Z" />
-    <path d="M42 13 H 48" stroke-width="2.4"/>
-    <path d="M45 22 L45 27" stroke-width="2.6"/>
+  <defs>
+    <linearGradient id="lgA" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity=".95"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity=".75"/>
+    </linearGradient>
+  </defs>
+  <g fill="none" stroke="url(#lgA)" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Llave inglesa -->
+    <path d="M14 50 L36 28" />
+    <path d="M12 52 a4 4 0 1 1 5 -5" />
+    <path d="M40 24 a8 8 0 1 0 -10 -10 l5 5 -3 3 -5 -5 a8 8 0 0 0 10 10 z" fill="url(#lgA)" fill-opacity=".18"/>
+    <!-- Destornillador cruzado -->
+    <path d="M50 14 L30 34" />
+    <path d="M52 12 l4 4 -4 4 -4 -4 z" fill="url(#lgA)" fill-opacity=".25"/>
+    <path d="M30 34 L26 38 L22 34 L26 30 Z" fill="url(#lgA)" fill-opacity=".25"/>
   </g>
 </svg>`.trim();
+
+  // Presets de logos (iconos intuitivos de taller)
+  const LOGO_PRESETS = [
+    { key:'tools', name:'Herramientas', svg: BRAND_LOGO_SVG },
+    { key:'gear',  name:'Engranaje', svg: `
+<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <g fill="currentColor">
+    <path d="M32 20a12 12 0 1 0 0 24 12 12 0 0 0 0-24zm0 18a6 6 0 1 1 0-12 6 6 0 0 1 0 12z"/>
+    <path d="M55 32l-3.7-2.1.6-4.2-4.1-1.1-1.5-4-4.2.3-3-3-3.4 2.5L32 19l-3.7-1.6-3.4-2.5-3 3-4.2-.3-1.5 4-4.1 1.1.6 4.2L9 32l3.7 2.1-.6 4.2 4.1 1.1 1.5 4 4.2-.3 3 3 3.4-2.5L32 45l3.7 1.6 3.4 2.5 3-3 4.2.3 1.5-4 4.1-1.1-.6-4.2z" fill="none" stroke="currentColor" stroke-width="2"/>
+  </g>
+</svg>`.trim() },
+    { key:'wrench', name:'Llave', svg: `
+<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <g fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M44 8a12 12 0 0 0-11 16L10 47a4 4 0 0 0 0 6l1 1a4 4 0 0 0 6 0l23-23a12 12 0 0 0 14-15l-7 7-6-1-1-6z" fill="currentColor" fill-opacity=".18"/>
+  </g>
+</svg>`.trim() },
+    { key:'circuit', name:'Circuito', svg: `
+<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="14" y="14" width="36" height="36" rx="4" fill="currentColor" fill-opacity=".08"/>
+    <path d="M22 22h8v8h-8z M34 22h8M34 30h8M22 38h20M22 46h8M34 46h8"/>
+    <circle cx="42" cy="22" r="2.4" fill="currentColor"/>
+    <circle cx="42" cy="30" r="2.4" fill="currentColor"/>
+    <circle cx="30" cy="46" r="2.4" fill="currentColor"/>
+  </g>
+</svg>`.trim() },
+    { key:'bolt', name:'Energía', svg: `
+<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <path d="M36 4 L14 36 h12 L22 60 L50 26 H38 z" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+</svg>`.trim() },
+    { key:'screwdriver', name:'Destornillador', svg: `
+<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <g fill="none" stroke="currentColor" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M44 6 L58 20 L40 38 L26 24 z" fill="currentColor" fill-opacity=".2"/>
+    <path d="M26 24 L8 42 a4 4 0 0 0 0 6 l8 8 a4 4 0 0 0 6 0 L40 38" />
+  </g>
+</svg>`.trim() }
+  ];
+
 
   function logoHtml(){
     const custom = DB.settings.logo;
     if(custom) return `<img src="${custom}" alt="logo">`;
-    return BRAND_LOGO_SVG;
+    const key = DB.settings.logoPreset || 'tools';
+    const p = LOGO_PRESETS.find(x=>x.key===key) || LOGO_PRESETS[0];
+    return p.svg;
   }
+  function getPresets(){ return LOGO_PRESETS; }
 
   function applyBrand(){
     const name = DB.settings.appName || 'Taller';
@@ -121,6 +164,6 @@ const App = (() => {
       err.classList.remove('hidden');
     }
   }
-  return { init, go, refresh, applyBrand };
+  return { init, go, refresh, applyBrand, getPresets };
 })();
 document.addEventListener('DOMContentLoaded', App.init);

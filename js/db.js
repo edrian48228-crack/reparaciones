@@ -12,7 +12,8 @@ const DB = (() => {
     schemaVersion: SCHEMA_VERSION,
     settings: {
       appName: 'Taller',
-      logo: null, // dataURL personalizado del logo (si null, se usa el SVG por defecto)
+      logo: null, // dataURL personalizado del logo (si null, se usa preset)
+      logoPreset: 'tools',
       requirePassword: true,
       passwordHash: null,
       deviceTypes: DEFAULT_DEVICES.slice(),
@@ -79,6 +80,7 @@ const DB = (() => {
     }
     if(!data.settings.creator){ data.settings.creator = { phone:'', whatsapp:'' }; changed = true; }
     if(data.settings.logo === undefined){ data.settings.logo = null; changed = true; }
+    if(!data.settings.logoPreset){ data.settings.logoPreset = 'tools'; changed = true; }
     data.schemaVersion = SCHEMA_VERSION;
     if(changed) save(false);
   }

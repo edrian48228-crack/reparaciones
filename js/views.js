@@ -73,15 +73,16 @@ const Views = (() => {
         </div>`;
       }
     }
+    const delBtn = `<button class="mini-action delete" data-del-id="${escape(r.id)}" data-stop="1" title="Eliminar reparación" aria-label="Eliminar">${ICONS.trash}</button>`;
+    const actionsRow = `<div class="card-phones bottom-row">${phoneHtml ? phoneHtml.replace(/^<div class="card-phones">/,'').replace(/<\/div>$/,'') : ''}${delBtn}</div>`;
     return `
       <div class="repair-card" data-id="${r.id}">
-        <button class="card-delete" data-del-id="${escape(r.id)}" data-stop="1" title="Eliminar reparación" aria-label="Eliminar">${ICONS.trash}</button>
         <div class="thumb">${thumb}</div>
         <div class="repair-info">
           <h3>${escape(r.clientName||'Cliente')}</h3>
           <p>${escape(r.device||'Equipo')}${r.brand?' · '+escape(r.brand):''} · ${escape(r.id)}</p>
           <span class="status ${r.status}">${statusLabel(r.status)}</span>
-          ${phoneHtml}
+          ${actionsRow}
         </div>
       </div>`;
   }
@@ -501,8 +502,31 @@ const Views = (() => {
     // Submit
     document.getElementById('repairForm').addEventListener('submit', e=>{
       e.preventDefault();
-      // Si está grabando, detenemos primero y guardamos
-      const doSave = ()=>{
+      // Capturamos FormData antes de chequeos asíncronos
+      const fd_pre = new FormData(e.target);
+      const doSave = async ()=>{
+        if(!existing){
+          const idn = (fd_pre.get('clientIdNumber')||'').trim();
+          if(idn && !naFields.includes('clientIdNumber')){
+            const dup = DB.repairs.find(x => (x.clientIdNumber||'').trim().toLowerCase() === idn.toLowerCase());
+            if(dup){
+              const ok = await UI.confirmDialog({
+                title:'Cliente ya existe',
+                message:`Ya existe un cliente con la identidad ${idn} (${dup.clientName||'sin nombre'}). ¿Crear otra reparación para el mismo cliente? Se usarán sus datos para evitar duplicados.`,
+                okText:'Sí, usar mismo cliente', cancelText:'Cancelar'
+              });
+              if(!ok) return;
+              // Forzar datos del cliente existente
+              const cn = document.getElementById('clientNameInput');
+              if(cn && !cn.value.trim()) cn.value = dup.clientName||'';
+              if(!photos.client && dup.clientPhoto) photos.client = dup.clientPhoto;
+              if((!phones.length || phones.every(x=>!x)) && (dup.clientPhones||[]).length){
+                phones.length = 0; (dup.clientPhones||[]).forEach(x=>phones.push(x));
+              }
+              if(dup.clientAddress && !document.querySelector("[name=clientAddress]").value.trim()) document.querySelector("[name=clientAddress]").value = dup.clientAddress;
+            }
+          }
+        }
         const fd = new FormData(e.target);
         const data = {};
         ['clientName','clientAddress','clientIdNumber','device','brand','model','serial','issue','status','notes'].forEach(k=>{
@@ -599,7 +623,7 @@ const Views = (() => {
       <div class="section-title">Cambiar estado</div>
       <div class="select-elegant">
         <select id="quickStatus">
-          ${['pending','in_progress','completed','delivered','cancelled'].map(s=>`<option value="${s}" ${r.status===s?'selected':''}>${statusLabel(s)||s}</option>`).join('')}
+          ${['pending','in_progress','completed','delivered'].map(s=>`<option value="${s}" ${r.status===s?'selected':''}>${statusLabel(s)||s}</option>`).join('')}
         </select>
       </div>
       <div class="btn-row three">
@@ -784,14 +808,21 @@ const Views = (() => {
         <h3>Logo del sistema</h3>
         <p>Sube una imagen (PNG/JPG/SVG). Se mostrará en el inicio de sesión y en la cabecera. Si no eliges ninguna se usa el logo por defecto.</p>
         <div class="logo-upload">
-          <div class="logo-preview" id="logoPreview">${s.logo?`<img src="${s.logo}">`:'<svg viewBox="0 0 64 64"><g fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 55 L20 44"/><path d="M19 45 L28 36 L36 44 L27 53 Z" fill="currentColor" fill-opacity=".15"/><path d="M35 43 L46 32"/><path d="M45 33 L51 27 L55 31 L49 37 Z" fill="currentColor" fill-opacity=".25"/><path d="M53 29 L58 24" stroke-width="3.8"/><circle cx="59" cy="23" r="2" fill="currentColor" stroke="none"/><path d="M11 49 C 6 49 6 43 11 43 C 16 43 16 37 11 37" stroke-width="2.6"/><path d="M40 9 L50 9 L50 19 L40 19 Z"/><path d="M42 13 H 48" stroke-width="2.4"/><path d="M45 22 L45 27" stroke-width="2.6"/></g></svg>'}</div>
+          <div class="logo-preview" id="logoPreview">${App.getPresets ? (s.logo?`<img src="${s.logo}">`:(App.getPresets().find(x=>x.key===(s.logoPreset||'tools'))||App.getPresets()[0]).svg) : ''}</div>
           <div class="logo-actions">
-            <label class="btn-secondary" style="display:inline-flex;align-items:center;justify-content:center;gap:6px;cursor:pointer">
+            <label class="btn-secondary btn-iconlbl">
               ${ICONS.upload}<span>Elegir imagen</span>
               <input type="file" id="logoFile" accept="image/*" hidden>
             </label>
-            <button class="btn-secondary" id="logoReset" ${s.logo?'':'disabled'}>${ICONS.trash} Restaurar por defecto</button>
+            <button class="btn-secondary btn-iconlbl" id="logoReset">${ICONS.trash}<span>Restaurar por defecto</span></button>
           </div>
+        </div>
+        <div class="preset-grid" id="presetGrid">
+          ${(App.getPresets ? App.getPresets() : []).map(p=>`
+            <button type="button" class="preset-tile ${(!s.logo && (s.logoPreset||'tools')===p.key)?'active':''}" data-preset="${escape(p.key)}" title="${escape(p.name)}">
+              <div class="preset-thumb">${p.svg}</div>
+              <span>${escape(p.name)}</span>
+            </button>`).join('')}
         </div>
       </div>
 
@@ -888,8 +919,40 @@ const Views = (() => {
       </div>
 
       <div class="admin-card">
-        <h3>Estadísticas</h3>
-        <p>Total reparaciones: <b>${DB.repairs.length}</b> · Versión de datos: v${DB.all.schemaVersion}</p>
+        <h3>Estadísticas de ganancias</h3>
+        <p>Calculadas sobre reparaciones <b>entregadas</b>. El saldo pendiente suma las que aún no se entregaron.</p>
+        ${(()=>{ 
+          const now=new Date(); const t0=new Date(now); t0.setHours(0,0,0,0);
+          const wd=(t0.getDay()+6)%7; const w0=new Date(t0); w0.setDate(w0.getDate()-wd);
+          const m0=new Date(t0.getFullYear(),t0.getMonth(),1);
+          const y0=new Date(t0.getFullYear(),0,1);
+          let dT=0,wT=0,mT=0,yT=0,total=0,pending=0,countDel=0;
+          for(const r of DB.repairs){
+            const price=Number(r.price||0); const dep=Number(r.deposit||0);
+            if(r.status==='delivered'){
+              countDel++;
+              const ts=r.updatedAt||r.createdAt||0;
+              total+=price;
+              if(ts>=t0.getTime()) dT+=price;
+              if(ts>=w0.getTime()) wT+=price;
+              if(ts>=m0.getTime()) mT+=price;
+              if(ts>=y0.getTime()) yT+=price;
+            } else if(r.status!=='cancelled' && price>0){
+              pending += Math.max(0, price - dep);
+            }
+          }
+          const fmt=v=>'$ '+Number(v).toFixed(2);
+          return `
+          <div class="earn-grid">
+            <div class="earn-tile"><span class="el">Hoy</span><span class="ev">${fmt(dT)}</span></div>
+            <div class="earn-tile"><span class="el">Esta semana</span><span class="ev">${fmt(wT)}</span></div>
+            <div class="earn-tile"><span class="el">Este mes</span><span class="ev">${fmt(mT)}</span></div>
+            <div class="earn-tile"><span class="el">Este año</span><span class="ev">${fmt(yT)}</span></div>
+            <div class="earn-tile gold"><span class="el">Total entregadas</span><span class="ev">${fmt(total)}</span></div>
+            <div class="earn-tile pending"><span class="el">Por cobrar</span><span class="ev">${fmt(pending)}</span></div>
+          </div>
+          <p class="muted small" style="margin-top:12px">Reparaciones entregadas: <b>${countDel}</b> · Total registradas: <b>${DB.repairs.length}</b> · Datos v${DB.all.schemaVersion}</p>`;
+        })()}
       </div>
     `;
 
@@ -912,17 +975,24 @@ const Views = (() => {
       }catch(err){ UI.toast('No se pudo procesar la imagen'); }
     });
     document.getElementById('logoReset').addEventListener('click', async ()=>{
-      if(!DB.settings.logo) return;
       const ok = await UI.confirmDialog({
         title:'Restaurar logo',
-        message:'¿Volver al logo por defecto?',
+        message:'¿Volver al logo por defecto del sistema?',
         okText:'Restaurar', cancelText:'Cancelar'
       });
       if(!ok) return;
-      DB.updateSettings({ logo: null });
+      DB.updateSettings({ logo: null, logoPreset: 'tools' });
       App.applyBrand();
       admin();
       UI.toast('Logo restaurado');
+    });
+    document.querySelectorAll('[data-preset]').forEach(b=>{
+      b.onclick = ()=>{
+        DB.updateSettings({ logo: null, logoPreset: b.dataset.preset });
+        App.applyBrand();
+        admin();
+        UI.toast('Logo actualizado');
+      };
     });
     function saveCreator(){
       DB.updateCreator({
