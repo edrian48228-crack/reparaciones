@@ -1,4 +1,4 @@
-const CACHE = 'taller-v10';
+const CACHE = 'taller-v11';
 const ASSETS = [
   './','./index.html','./manifest.json',
   './css/styles.css',

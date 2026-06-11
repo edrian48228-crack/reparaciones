@@ -1,7 +1,7 @@
 // Almacén con localStorage + migración compatible hacia adelante.
 const DB = (() => {
   const KEY = 'taller_db_v1';
-  const SCHEMA_VERSION = 7;
+  const SCHEMA_VERSION = 8;
   const DEFAULT_DEVICES = [
     'Televisor','Smart TV','Monitor','Laptop','PC de escritorio','Tablet',
     'Teléfono móvil','Impresora','Microondas','Lavadora','Refrigerador',
@@ -82,6 +82,11 @@ const DB = (() => {
     }
     if(!Array.isArray(data.transactions)){ data.transactions = []; changed = true; }
     if(typeof data.txCounter !== 'number'){ data.txCounter = 1; changed = true; }
+    for(const t of data.transactions){
+      // Migración: campos de coste para sacar ganancia/inversión
+      if(t.unitCost === undefined){ t.unitCost = null; changed = true; }
+      if(t.costTotal === undefined){ t.costTotal = null; changed = true; }
+    }
     if(!Array.isArray(data.settings.deviceTypes) || !data.settings.deviceTypes.length){
       data.settings.deviceTypes = DEFAULT_DEVICES.slice(); changed = true;
     }

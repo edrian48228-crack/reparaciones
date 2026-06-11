@@ -777,3 +777,44 @@ main{padding:96px 16px 110px;max-width:720px;margin:0 auto;width:100%}
 .chooser-tile.purchase{border-left:3px solid #ff7b6b}
 .chooser-tile.purchase .ico{color:#ff9b8b}
 .chooser-tile.repair{border-left:3px solid var(--primary-glow)}
+
+/* === v11: accordion (estadísticas desplegables) === */
+.acc-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  margin-bottom:10px;overflow:hidden;transition:border-color .15s
+}
+.acc-card.open{border-color:rgba(232,196,106,.45)}
+.acc-head{
+  width:100%;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;
+  padding:14px 16px;background:transparent;border:0;color:var(--text);cursor:pointer;text-align:left
+}
+.acc-head .acc-ico{color:var(--primary-glow);display:flex}
+.acc-head .acc-ico svg{width:22px;height:22px}
+.acc-head .acc-title{font-weight:700;font-size:15px;grid-column:2;line-height:1.1}
+.acc-head .acc-sub{display:block;font-size:11.5px;color:var(--muted);grid-column:2;margin-top:2px;font-weight:500;letter-spacing:.2px}
+.acc-head .acc-chev{
+  width:10px;height:10px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);
+  transform:rotate(45deg);transition:transform .2s;margin-right:4px
+}
+.acc-card.open .acc-head .acc-chev{transform:rotate(-135deg);border-color:var(--gold-glow)}
+.acc-body{max-height:0;overflow:hidden;padding:0 16px;transition:max-height .25s ease, padding .2s}
+.acc-card.open .acc-body{max-height:2000px;padding:4px 16px 16px}
+
+/* === v11: ganancia/inversión en transacciones === */
+.tx-profit{margin-left:8px;font-weight:700;font-size:12px}
+.tx-profit.pos{color:#7be0a0}
+.tx-profit.neg{color:#ff9b8b}
+.tx-stat-rows .dot.cost{background:#e8c46a}
+
+.profit-hint{
+  margin-top:8px;display:flex;flex-direction:column;gap:4px;
+  padding:10px 12px;border-radius:10px;
+  background:var(--surface-2);border:1px dashed rgba(232,196,106,.35)
+}
+.profit-hint.hidden{display:none}
+.profit-hint .ph-row{display:flex;justify-content:space-between;font-size:13px;color:#ddd}
+.profit-hint .ph-row b{font-weight:800}
+.profit-hint .ph-row.pos b{color:#7be0a0}
+.profit-hint .ph-row.neg b{color:#ff9b8b}
+
+.cost-group label .muted{font-size:11px}

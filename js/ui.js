@@ -85,11 +85,17 @@ const UI = (() => {
       }
     });
   }
+  // Estado global compartido del visor — evita que swipes posteriores
+  // reutilicen las imágenes de un cliente anterior.
+  const _viewerState = { srcs: [], i: 0, el: null, keyHandler: null };
   function openImageViewer(srcs, index=0){
     if(typeof srcs === 'string') srcs = [srcs];
     if(!srcs || !srcs.length) return;
-    let i = Math.max(0, Math.min(index, srcs.length-1));
-    let el = document.getElementById('imgViewer');
+    // Copia defensiva — si el llamador muta su array, no nos afecta
+    _viewerState.srcs = srcs.slice();
+    _viewerState.i = Math.max(0, Math.min(index, _viewerState.srcs.length-1));
+
+    let el = _viewerState.el;
     if(!el){
       el = document.createElement('div');
       el.id = 'imgViewer';
@@ -101,29 +107,52 @@ const UI = (() => {
         <button class="iv-next" aria-label="Siguiente">&#10095;</button>
         <div class="iv-count"></div>`;
       document.body.appendChild(el);
+      _viewerState.el = el;
       el.addEventListener('click', e=>{
-        if(e.target===el || e.target.classList.contains('iv-close')) close();
+        if(e.target===el || e.target.classList.contains('iv-close')) closeViewer();
       });
-      el.querySelector('.iv-prev').onclick = ()=> show(i-1);
-      el.querySelector('.iv-next').onclick = ()=> show(i+1);
-      document.addEventListener('keydown', e=>{
-        if(el.classList.contains('open')){
-          if(e.key==='Escape') close();
-          if(e.key==='ArrowLeft') show(i-1);
-          if(e.key==='ArrowRight') show(i+1);
+      el.querySelector('.iv-prev').addEventListener('click', ()=> showAt(_viewerState.i-1));
+      el.querySelector('.iv-next').addEventListener('click', ()=> showAt(_viewerState.i+1));
+      // Soporte gestos táctiles para imágenes únicas: no navegar
+      let tStartX = 0, tStartY = 0;
+      el.addEventListener('touchstart', e=>{
+        if(!e.touches[0]) return;
+        tStartX = e.touches[0].clientX; tStartY = e.touches[0].clientY;
+      }, {passive:true});
+      el.addEventListener('touchend', e=>{
+        if(_viewerState.srcs.length<=1) return;
+        const t = e.changedTouches[0]; if(!t) return;
+        const dx = t.clientX - tStartX, dy = t.clientY - tStartY;
+        if(Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)){
+          showAt(_viewerState.i + (dx<0 ? 1 : -1));
         }
       });
+      _viewerState.keyHandler = e=>{
+        if(!el.classList.contains('open')) return;
+        if(e.key==='Escape') closeViewer();
+        if(_viewerState.srcs.length<=1) return;
+        if(e.key==='ArrowLeft') showAt(_viewerState.i-1);
+        if(e.key==='ArrowRight') showAt(_viewerState.i+1);
+      };
+      document.addEventListener('keydown', _viewerState.keyHandler);
     }
-    function show(n){
-      i = (n + srcs.length) % srcs.length;
-      el.querySelector('.iv-img').src = srcs[i];
-      el.querySelector('.iv-count').textContent = srcs.length>1 ? `${i+1} / ${srcs.length}` : '';
-      el.querySelector('.iv-prev').style.display = srcs.length>1 ? '' : 'none';
-      el.querySelector('.iv-next').style.display = srcs.length>1 ? '' : 'none';
+    function showAt(n){
+      const len = _viewerState.srcs.length;
+      if(!len) return;
+      _viewerState.i = (n + len) % len;
+      el.querySelector('.iv-img').src = _viewerState.srcs[_viewerState.i];
+      el.querySelector('.iv-count').textContent = len>1 ? `${_viewerState.i+1} / ${len}` : '';
+      el.querySelector('.iv-prev').style.display = len>1 ? '' : 'none';
+      el.querySelector('.iv-next').style.display = len>1 ? '' : 'none';
     }
-    function close(){ el.classList.remove('open'); }
-    el._srcs = srcs;
-    show(i);
+    function closeViewer(){
+      el.classList.remove('open');
+      // Limpia para que no aparezcan fotos de otros clientes después
+      _viewerState.srcs = [];
+      _viewerState.i = 0;
+      const img = el.querySelector('.iv-img'); if(img) img.src = '';
+    }
+    showAt(_viewerState.i);
     el.classList.add('open');
   }
   async function resizeImage(file, maxDim=900, quality=.72){

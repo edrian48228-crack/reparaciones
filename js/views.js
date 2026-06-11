@@ -992,42 +992,15 @@ const Views = (() => {
       </div>
 
       <div class="admin-card">
-        <h3>Estadísticas de ganancias</h3>
-        <p>Calculadas sobre reparaciones <b>entregadas</b>. El saldo pendiente suma lo que aún no se ha cobrado.</p>
-        ${(()=>{ 
-          const now=new Date(); const t0=new Date(now); t0.setHours(0,0,0,0);
-          const wd=(t0.getDay()+6)%7; const w0=new Date(t0); w0.setDate(w0.getDate()-wd);
-          const m0=new Date(t0.getFullYear(),t0.getMonth(),1);
-          const y0=new Date(t0.getFullYear(),0,1);
-          let dT=0,wT=0,mT=0,yT=0,total=0,pending=0,countDel=0;
-          for(const r of DB.repairs){
-            const price=Number(r.price||0); const dep=Number(r.deposit||0);
-            if(r.status==='delivered'){
-              countDel++;
-              const ts=r.updatedAt||r.createdAt||0;
-              total+=price;
-              if(ts>=t0.getTime()) dT+=price;
-              if(ts>=w0.getTime()) wT+=price;
-              if(ts>=m0.getTime()) mT+=price;
-              if(ts>=y0.getTime()) yT+=price;
-            } else if(r.status!=='cancelled' && price>0){
-              pending += Math.max(0, price - dep);
-            }
-          }
-          const fmt=v=>'$ '+Number(v).toFixed(2);
-          return `
-          <div class="earn-grid">
-            <div class="earn-tile"><span class="el">Hoy</span><span class="ev">${fmt(dT)}</span></div>
-            <div class="earn-tile"><span class="el">Esta semana</span><span class="ev">${fmt(wT)}</span></div>
-            <div class="earn-tile"><span class="el">Este mes</span><span class="ev">${fmt(mT)}</span></div>
-            <div class="earn-tile"><span class="el">Este año</span><span class="ev">${fmt(yT)}</span></div>
-            <div class="earn-tile gold"><span class="el">Total entregadas</span><span class="ev">${fmt(total)}</span></div>
-            <div class="earn-tile pending"><span class="el">Por cobrar</span><span class="ev">${fmt(pending)}</span></div>
-          </div>
-          <p class="muted small" style="margin-top:12px">Reparaciones entregadas: <b>${countDel}</b> · Total registradas: <b>${DB.repairs.length}</b> · Datos v${DB.all.schemaVersion}</p>`;
-        })()}
+        <h3>Estadísticas</h3>
+        <p>Las estadísticas del sistema (reparaciones) y de compras/ventas se muestran ahora en la sección <b>Comp/Vent</b>, desplegables para acceder con un toque.</p>
+        <button class="btn-secondary" id="goStatsBtn">Ir a estadísticas</button>
       </div>
     `;
+
+    const gs = document.getElementById('goStatsBtn');
+    if(gs) gs.onclick = ()=> App.go('sales');
+
 
     document.getElementById('appNameInput').addEventListener('change', e=>{
       DB.updateSettings({ appName: e.target.value.trim() || 'Taller' });
@@ -1183,24 +1156,55 @@ const Views = (() => {
     const w0 = new Date(t0); w0.setDate(w0.getDate()-wd);
     const m0 = new Date(t0.getFullYear(), t0.getMonth(), 1);
     const y0 = new Date(t0.getFullYear(), 0, 1);
+    // sale=ingreso por ventas, cost=inversión (coste real de los productos vendidos),
+    // purchase=gasto en compras de stock/insumos
+    const empty = ()=>({sale:0, cost:0, purchase:0});
     const buckets = {
-      day:   {sale:0, purchase:0},
-      week:  {sale:0, purchase:0},
-      month: {sale:0, purchase:0},
-      year:  {sale:0, purchase:0},
-      total: {sale:0, purchase:0}
+      day:   empty(),
+      week:  empty(),
+      month: empty(),
+      year:  empty(),
+      total: empty()
     };
     for(const tx of list){
       const total = Number(tx.total||0);
-      const k = tx.type==='sale' ? 'sale' : 'purchase';
       const ts = tx.date || tx.createdAt || 0;
-      buckets.total[k] += total;
-      if(ts >= y0.getTime()) buckets.year[k] += total;
-      if(ts >= m0.getTime()) buckets.month[k] += total;
-      if(ts >= w0.getTime()) buckets.week[k] += total;
-      if(ts >= t0.getTime()) buckets.day[k] += total;
+      const isSale = tx.type==='sale';
+      const cost = isSale ? Number(tx.costTotal||0) : 0;
+      function add(b){
+        if(isSale){ b.sale += total; b.cost += cost; }
+        else b.purchase += total;
+      }
+      add(buckets.total);
+      if(ts >= y0.getTime()) add(buckets.year);
+      if(ts >= m0.getTime()) add(buckets.month);
+      if(ts >= w0.getTime()) add(buckets.week);
+      if(ts >= t0.getTime()) add(buckets.day);
     }
     return buckets;
+  }
+
+  function computeRepairStats(){
+    const now=new Date(); const t0=new Date(now); t0.setHours(0,0,0,0);
+    const wd=(t0.getDay()+6)%7; const w0=new Date(t0); w0.setDate(w0.getDate()-wd);
+    const m0=new Date(t0.getFullYear(),t0.getMonth(),1);
+    const y0=new Date(t0.getFullYear(),0,1);
+    let dT=0,wT=0,mT=0,yT=0,total=0,pending=0,countDel=0;
+    for(const r of DB.repairs){
+      const price=Number(r.price||0); const dep=Number(r.deposit||0);
+      if(r.status==='delivered'){
+        countDel++;
+        const ts=r.updatedAt||r.createdAt||0;
+        total+=price;
+        if(ts>=t0.getTime()) dT+=price;
+        if(ts>=w0.getTime()) wT+=price;
+        if(ts>=m0.getTime()) mT+=price;
+        if(ts>=y0.getTime()) yT+=price;
+      } else if(r.status!=='cancelled' && price>0){
+        pending += Math.max(0, price - dep);
+      }
+    }
+    return { dT, wT, mT, yT, total, pending, countDel };
   }
 
   function txCard(t){
@@ -1211,6 +1215,12 @@ const Views = (() => {
     const unit = Number(t.unitPrice||0);
     const total = Number(t.total||0);
     const cp = t.counterparty ? ` · ${escape(t.counterparty)}` : '';
+    let profitHtml = '';
+    if(isSale && t.costTotal != null){
+      const profit = total - Number(t.costTotal||0);
+      const pcls = profit>=0 ? 'pos' : 'neg';
+      profitHtml = `<span class="tx-profit ${pcls}">Ganancia $ ${profit.toFixed(2)}</span>`;
+    }
     return `
       <div class="tx-card ${cls}" data-tx-id="${escape(t.id)}">
         <div class="tx-info">
@@ -1220,7 +1230,7 @@ const Views = (() => {
           </div>
           <h3>${escape(t.product||'Producto')}</h3>
           <p class="muted small">${qty} × $ ${unit.toFixed(2)}${cp}</p>
-          <p class="muted small">${fmtDate(t.date||t.createdAt)}</p>
+          <p class="muted small">${fmtDate(t.date||t.createdAt)} ${profitHtml}</p>
         </div>
         <div class="tx-amount ${cls}">${sign} $ ${total.toFixed(2)}</div>
       </div>`;
@@ -1232,26 +1242,67 @@ const Views = (() => {
     });
   }
 
+  // Accordion ligero — clickea cabecera para abrir/cerrar
+  function bindAccordions(root){
+    (root||view()).querySelectorAll('[data-acc]').forEach(head=>{
+      head.addEventListener('click', ()=>{
+        const card = head.closest('.acc-card');
+        if(!card) return;
+        card.classList.toggle('open');
+      });
+    });
+  }
+
+  function fmtMoney(v){ return '$ '+Number(v||0).toFixed(2); }
+
+  function sysStatsTilesHtml(){
+    const s = computeRepairStats();
+    return `
+      <div class="earn-grid">
+        <div class="earn-tile"><span class="el">Hoy</span><span class="ev">${fmtMoney(s.dT)}</span></div>
+        <div class="earn-tile"><span class="el">Esta semana</span><span class="ev">${fmtMoney(s.wT)}</span></div>
+        <div class="earn-tile"><span class="el">Este mes</span><span class="ev">${fmtMoney(s.mT)}</span></div>
+        <div class="earn-tile"><span class="el">Este año</span><span class="ev">${fmtMoney(s.yT)}</span></div>
+        <div class="earn-tile gold"><span class="el">Total entregadas</span><span class="ev">${fmtMoney(s.total)}</span></div>
+        <div class="earn-tile pending"><span class="el">Por cobrar</span><span class="ev">${fmtMoney(s.pending)}</span></div>
+      </div>
+      <p class="muted small" style="margin-top:12px">Reparaciones entregadas: <b>${s.countDel}</b> · Total registradas: <b>${DB.repairs.length}</b> · Datos v${DB.all.schemaVersion}</p>`;
+  }
+
+  function cvStatsTilesHtml(){
+    const stats = computeTxStats(DB.transactions);
+    function tile(label, b, accent){
+      const net = b.sale - b.purchase;
+      const profit = b.sale - b.cost;
+      const netCls = net>=0 ? 'pos' : 'neg';
+      const profCls = profit>=0 ? 'pos' : 'neg';
+      return `<div class="tx-stat-card ${accent||''}">
+        <div class="tx-stat-label">${escape(label)}</div>
+        <div class="tx-stat-rows">
+          <div><span class="dot sale"></span>Ventas <b>${fmtMoney(b.sale)}</b></div>
+          <div><span class="dot purchase"></span>Compras <b>${fmtMoney(b.purchase)}</b></div>
+          <div><span class="dot cost"></span>Inversión <b>${fmtMoney(b.cost)}</b></div>
+        </div>
+        <div class="tx-stat-net ${profCls}">Ganancia: <b>${fmtMoney(profit)}</b></div>
+        <div class="tx-stat-net ${netCls}">Caja neta: <b>${fmtMoney(net)}</b></div>
+      </div>`;
+    }
+    return `
+      <div class="tx-stats-grid">
+        ${tile('Hoy', stats.day)}
+        ${tile('Esta semana', stats.week)}
+        ${tile('Este mes', stats.month)}
+        ${tile('Este año', stats.year)}
+        ${tile('Total histórico', stats.total, 'gold')}
+      </div>
+      <p class="muted small" style="margin-top:10px"><b>Ganancia</b> = ventas − inversión (lo que te costaron los productos). <b>Caja neta</b> = ventas − compras totales.</p>`;
+  }
+
   function sales(filter){
     const active = filter || 'all';
     let list = DB.transactions.slice();
     if(active!=='all') list = list.filter(t=>t.type===active);
     list.sort((a,b)=>(b.date||b.createdAt||0)-(a.date||a.createdAt||0));
-
-    const stats = computeTxStats(DB.transactions);
-    const fmt = v=>'$ '+Number(v||0).toFixed(2);
-    function tile(label, b, accent){
-      const net = b.sale - b.purchase;
-      const netCls = net>=0 ? 'pos' : 'neg';
-      return `<div class="tx-stat-card ${accent||''}">
-        <div class="tx-stat-label">${escape(label)}</div>
-        <div class="tx-stat-rows">
-          <div><span class="dot sale"></span>Ventas <b>${fmt(b.sale)}</b></div>
-          <div><span class="dot purchase"></span>Compras <b>${fmt(b.purchase)}</b></div>
-        </div>
-        <div class="tx-stat-net ${netCls}">Neto: <b>${fmt(net)}</b></div>
-      </div>`;
-    }
 
     const opts = TX_FILTERS.map(f=>`<option value="${f.k}" ${f.k===active?'selected':''}>${f.label}</option>`).join('');
 
@@ -1262,14 +1313,28 @@ const Views = (() => {
     `).join('');
 
     view().innerHTML = `
-      <div class="greeting">Ventas y <span>Compras</span></div>
-      <div class="tx-stats-grid">
-        ${tile('Hoy', stats.day)}
-        ${tile('Esta semana', stats.week)}
-        ${tile('Este mes', stats.month)}
-        ${tile('Este año', stats.year)}
-        ${tile('Total histórico', stats.total, 'gold')}
+      <div class="greeting">Compras y <span>Ventas</span></div>
+
+      <div class="acc-card">
+        <button class="acc-head" data-acc type="button">
+          <span class="acc-ico">${ICONS.edit}</span>
+          <span class="acc-title">Estadísticas del sistema</span>
+          <span class="acc-sub">Reparaciones · entregas e ingresos</span>
+          <span class="acc-chev"></span>
+        </button>
+        <div class="acc-body">${sysStatsTilesHtml()}</div>
       </div>
+
+      <div class="acc-card open">
+        <button class="acc-head" data-acc type="button">
+          <span class="acc-ico">${ICONS.box}</span>
+          <span class="acc-title">Estadísticas de compras y ventas</span>
+          <span class="acc-sub">Inversión · ganancia · caja neta</span>
+          <span class="acc-chev"></span>
+        </button>
+        <div class="acc-body">${cvStatsTilesHtml()}</div>
+      </div>
+
       <div class="btn-row" style="margin:14px 0 6px">
         <button class="btn-secondary" id="newSaleBtn">${ICONS.plus} Nueva venta</button>
         <button class="btn-secondary" id="newPurchaseBtn">${ICONS.plus} Nueva compra</button>
@@ -1282,8 +1347,10 @@ const Views = (() => {
     document.getElementById('newSaleBtn').onclick = ()=> newTransaction('sale');
     document.getElementById('newPurchaseBtn').onclick = ()=> newTransaction('purchase');
     document.getElementById('txFilter').addEventListener('change', e=> sales(e.target.value));
+    bindAccordions();
     bindTxCards();
   }
+
 
   function newTransaction(type, existing){
     const t = existing || { type };
@@ -1319,6 +1386,12 @@ const Views = (() => {
             <input name="unitPrice" type="number" min="0" step="0.01" inputmode="decimal" required value="${t.unitPrice!=null?t.unitPrice:''}">
           </div>
         </div>
+        <div class="form-group cost-group" id="costGroup">
+          <label>Costo unitario (lo que te costó) <span class="muted" style="text-transform:none;font-weight:500">— opcional</span></label>
+          <input name="unitCost" type="number" min="0" step="0.01" inputmode="decimal" value="${t.unitCost!=null?t.unitCost:''}" placeholder="Ej: 5.00">
+          <p class="muted small" style="margin:6px 2px 0">Se usa para calcular tu <b>ganancia</b> e <b>inversión</b> al vender.</p>
+          <div id="profitHint" class="profit-hint hidden"></div>
+        </div>
         <div class="form-group">
           <label>Total</label>
           <input name="total" type="number" min="0" step="0.01" inputmode="decimal" id="txTotalInput" value="${t.total!=null?t.total:''}" placeholder="Se calcula automáticamente">
@@ -1345,24 +1418,51 @@ const Views = (() => {
     const form = document.getElementById('txForm');
     const qty = form.querySelector('[name=quantity]');
     const unit = form.querySelector('[name=unitPrice]');
+    const costI = form.querySelector('[name=unitCost]');
     const totalI = document.getElementById('txTotalInput');
     const cpLabel = document.getElementById('cpLabel');
     const typeSel = form.querySelector('[name=type]');
+    const costGroup = document.getElementById('costGroup');
+    const profitHint = document.getElementById('profitHint');
     let totalEdited = !!(existing && t.total!=null);
     function recalc(){
-      if(totalEdited) return;
+      if(!totalEdited){
+        const q = parseFloat(qty.value)||0;
+        const u = parseFloat(unit.value)||0;
+        totalI.value = (q*u).toFixed(2);
+      }
+      updateProfitHint();
+    }
+    function updateProfitHint(){
+      if(typeSel.value !== 'sale'){ profitHint.classList.add('hidden'); return; }
       const q = parseFloat(qty.value)||0;
       const u = parseFloat(unit.value)||0;
-      totalI.value = (q*u).toFixed(2);
+      const c = parseFloat(costI.value);
+      const totalCalc = parseFloat(totalI.value) || (q*u);
+      if(isNaN(c) || costI.value===''){ profitHint.classList.add('hidden'); return; }
+      const inv = c*q;
+      const profit = totalCalc - inv;
+      const cls = profit>=0 ? 'pos' : 'neg';
+      profitHint.classList.remove('hidden');
+      profitHint.innerHTML = `
+        <span class="ph-row"><span>Inversión</span><b>$ ${inv.toFixed(2)}</b></span>
+        <span class="ph-row ${cls}"><span>Ganancia estimada</span><b>$ ${profit.toFixed(2)}</b></span>`;
     }
     function updateCpLabel(){
       cpLabel.textContent = typeSel.value==='sale' ? 'Cliente' : 'Proveedor';
     }
+    function updateCostVisibility(){
+      // El campo coste es útil sobre todo en ventas; en compras lo ocultamos
+      costGroup.style.display = typeSel.value==='sale' ? '' : 'none';
+      updateProfitHint();
+    }
     qty.addEventListener('input', recalc);
     unit.addEventListener('input', recalc);
-    totalI.addEventListener('input', ()=>{ totalEdited = true; });
-    typeSel.addEventListener('change', updateCpLabel);
+    if(costI) costI.addEventListener('input', updateProfitHint);
+    totalI.addEventListener('input', ()=>{ totalEdited = true; updateProfitHint(); });
+    typeSel.addEventListener('change', ()=>{ updateCpLabel(); updateCostVisibility(); });
     updateCpLabel();
+    updateCostVisibility();
     if(!totalEdited) recalc();
 
     form.addEventListener('submit', e=>{
@@ -1373,12 +1473,18 @@ const Views = (() => {
       const q = parseFloat(fd.get('quantity'))||0;
       const u = parseFloat(fd.get('unitPrice'))||0;
       const tot = fd.get('total')!=='' ? parseFloat(fd.get('total')) : (q*u);
+      const typeVal = fd.get('type')==='purchase' ? 'purchase' : 'sale';
+      const costRaw = fd.get('unitCost');
+      const hasCost = typeVal==='sale' && costRaw!=null && String(costRaw).trim()!=='';
+      const unitCost = hasCost ? parseFloat(costRaw) : null;
       const dateStr = fd.get('date');
       const data = {
-        type: fd.get('type')==='purchase' ? 'purchase' : 'sale',
+        type: typeVal,
         product,
         quantity: q,
         unitPrice: u,
+        unitCost: unitCost,
+        costTotal: hasCost ? Number((unitCost*q).toFixed(2)) : null,
         total: Number(tot.toFixed(2)),
         date: dateStr ? new Date(dateStr).getTime() : Date.now(),
         counterparty: (fd.get('counterparty')||'').trim() || null,
@@ -1403,12 +1509,26 @@ const Views = (() => {
     const t = DB.findTransaction(id); if(!t) return;
     const isSale = t.type==='sale';
     const sign = isSale ? '+' : '-';
+    const total = Number(t.total||0);
+    const qty = Number(t.quantity||0);
+    let saleExtras = '';
+    if(isSale && t.unitCost != null){
+      const unitCost = Number(t.unitCost||0);
+      const invTotal = t.costTotal != null ? Number(t.costTotal) : unitCost*qty;
+      const profit = total - invTotal;
+      const pcls = profit>=0 ? 'pos' : 'neg';
+      saleExtras = `
+        <div class="detail-row"><span class="lbl">Costo unit.</span><span class="val">$ ${unitCost.toFixed(2)}</span></div>
+        <div class="detail-row"><span class="lbl">Inversión</span><span class="val">$ ${invTotal.toFixed(2)}</span></div>
+        <div class="detail-row"><span class="lbl">Ganancia</span><span class="val tx-profit ${pcls}">$ ${profit.toFixed(2)}</span></div>`;
+    }
     UI.openModal(`
       <h2 style="margin:0 0 4px;font-size:20px">${escape(t.product||'Producto')}</h2>
       <p class="muted" style="margin:0 0 14px">${escape(t.id)} · <span class="tx-badge ${isSale?'sale':'purchase'}">${txLabel(t.type)}</span></p>
-      <div class="detail-row"><span class="lbl">Cantidad</span><span class="val">${Number(t.quantity||0)}</span></div>
+      <div class="detail-row"><span class="lbl">Cantidad</span><span class="val">${qty}</span></div>
       <div class="detail-row"><span class="lbl">Precio unit.</span><span class="val">$ ${Number(t.unitPrice||0).toFixed(2)}</span></div>
-      <div class="detail-row"><span class="lbl">Total</span><span class="val tx-amount ${isSale?'sale':'purchase'}">${sign} $ ${Number(t.total||0).toFixed(2)}</span></div>
+      <div class="detail-row"><span class="lbl">Total</span><span class="val tx-amount ${isSale?'sale':'purchase'}">${sign} $ ${total.toFixed(2)}</span></div>
+      ${saleExtras}
       <div class="detail-row"><span class="lbl">Fecha</span><span class="val">${fmtDate(t.date||t.createdAt)}</span></div>
       <div class="detail-row"><span class="lbl">${isSale?'Cliente':'Proveedor'}</span><span class="val">${t.counterparty?escape(t.counterparty):'<span class="muted">—</span>'}</span></div>
       <div class="detail-row"><span class="lbl">Notas</span><span class="val">${t.notes?escape(t.notes):'<span class="muted">—</span>'}</span></div>
