@@ -968,3 +968,84 @@ main{padding:96px 16px 110px;max-width:720px;margin:0 auto;width:100%}
 .cv-tile-label{font-size:12px}
 .cv-tile-profit{font-size:14px}
 .cv-mini b{font-size:12.5px}
+
+/* === v15: anti-overflow en tiles de Comp/Vent === */
+.cv-tile{ min-width:0; overflow:hidden }
+.cv-tile-head{ flex-wrap:wrap; row-gap:2px }
+.cv-tile-label{ min-width:0; flex:1 1 auto; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+.cv-tile-profit{ flex:0 0 auto; white-space:nowrap; font-variant-numeric:tabular-nums }
+.cv-tile-grid{
+  grid-template-columns:repeat(auto-fit, minmax(110px, 1fr));
+}
+.cv-mini{ min-width:0; flex-wrap:wrap; row-gap:2px }
+.cv-mini span{ min-width:0; flex:1 1 auto; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+.cv-mini b{ flex:0 0 auto; white-space:nowrap; font-variant-numeric:tabular-nums }
+@media (max-width:380px){
+  .cv-mini{ flex-direction:column; align-items:flex-start }
+  .cv-mini b{ align-self:flex-end }
+}
+
+/* === v15: dual photo buttons (cámara + galería) === */
+.photo-add-row{
+  display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:8px;
+}
+.photo-add-btn.cam, .photo-add-btn.gal{
+  margin-top:0;
+}
+.photo-add-btn.cam{
+  border-color:rgba(232,196,106,.5);
+  background:linear-gradient(135deg, rgba(232,196,106,.10), rgba(122,31,31,.10));
+}
+
+/* Client photo actions overlay */
+.client-photo-actions{
+  display:flex; gap:8px; margin-top:6px; justify-content:center; flex-wrap:wrap;
+}
+.client-photo-actions.empty{ width:100% }
+.cp-btn{
+  display:inline-flex; align-items:center; gap:6px;
+  padding:8px 12px; border-radius:10px;
+  border:1px solid var(--border); background:rgba(255,255,255,.04);
+  font-size:12.5px; font-weight:600; cursor:pointer; position:relative;
+  color:inherit;
+}
+.cp-btn.cam{
+  border-color:rgba(232,196,106,.45);
+  background:linear-gradient(135deg, rgba(232,196,106,.10), rgba(122,31,31,.10));
+}
+.cp-btn input[type=file]{ position:absolute; inset:0; opacity:0; cursor:pointer }
+.cp-btn .ico{ width:18px; height:18px }
+.cp-mini{
+  position:absolute; bottom:6px;
+  display:inline-flex; align-items:center; justify-content:center;
+  width:34px; height:34px; border-radius:50%;
+  background:rgba(0,0,0,.55); backdrop-filter:blur(6px);
+  border:1px solid rgba(255,255,255,.18); cursor:pointer;
+}
+.cp-mini:nth-child(1){ left:8px }
+.cp-mini:nth-child(2){ left:48px }
+.cp-mini input[type=file]{ position:absolute; inset:0; opacity:0; cursor:pointer }
+.cp-mini .ico{ width:18px; height:18px; color:#fff }
+.client-photo-box.has-img .client-photo-actions{ position:absolute; left:0; bottom:8px; width:100% }
+
+/* v15 overrides: dual buttons inside circular client photo */
+.photo-input.has-img .cp-mini input[type=file]{ display:block }
+.photo-input .client-photo-actions.empty{
+  flex-direction:row; gap:6px; margin-top:8px;
+}
+.photo-input .cp-btn{
+  padding:6px 8px; font-size:10.5px; border-radius:8px;
+}
+.photo-input .cp-btn .ico{ width:14px; height:14px }
+.photo-input .cp-btn span{ font-size:10.5px }
+
+.photo-input.has-img .client-photo-actions{
+  position:absolute; left:50%; bottom:6px; transform:translateX(-50%);
+  width:auto; margin:0; gap:6px;
+  background:rgba(0,0,0,.55); padding:4px; border-radius:999px;
+  backdrop-filter:blur(6px);
+}
+.photo-input.has-img .cp-mini{
+  position:relative; left:auto; bottom:auto;
+  width:30px; height:30px;
+}

@@ -2,61 +2,84 @@ const App = (() => {
   let current = 'dashboard';
   let currentArg = null;
 
-  // SVG logo por defecto: llave + destornillador cruzados
-  const BRAND_LOGO_SVG = `
-<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
-  <g fill="none" stroke="currentColor" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M14 50 L36 28" />
-    <path d="M12 52 a4 4 0 1 1 5 -5" />
-    <path d="M40 24 a8 8 0 1 0 -10 -10 l5 5 -3 3 -5 -5 a8 8 0 0 0 10 10 z" fill="currentColor" fill-opacity=".18"/>
-    <path d="M50 14 L30 34" />
-    <path d="M52 12 l4 4 -4 4 -4 -4 z" fill="currentColor" fill-opacity=".25"/>
-    <path d="M30 34 L26 38 L22 34 L26 30 Z" fill="currentColor" fill-opacity=".25"/>
-  </g>
-</svg>`.trim();
-
+  // Logos: trazos refinados, geometría centrada, estética premium
   const LOGO_PRESETS = [
-    { key:'tools', name:'Herramientas', svg: BRAND_LOGO_SVG },
-    { key:'gear', name:'Engranaje', svg: `
+    { key:'phoenix', name:'Fénix', svg: `
 <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
-  <g fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M32 6v6 M32 52v6 M6 32h6 M52 32h6 M14 14l4 4 M46 46l4 4 M14 50l4-4 M46 18l4-4" />
-    <circle cx="32" cy="32" r="14" fill="currentColor" fill-opacity=".15"/>
-    <circle cx="32" cy="32" r="5" fill="currentColor"/>
+  <defs><linearGradient id="lg-ph" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="currentColor" stop-opacity=".95"/>
+    <stop offset="1" stop-color="currentColor" stop-opacity=".5"/>
+  </linearGradient></defs>
+  <g fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M32 8 C 20 18 18 30 26 38 L 22 44 C 30 42 34 38 36 32 C 38 38 42 42 50 44 L 46 38 C 54 30 52 18 40 10 C 38 16 36 20 32 22 C 30 18 30 12 32 8 Z" fill="url(#lg-ph)" fill-opacity=".25"/>
+    <path d="M24 48 L40 48 M22 54 L42 54" stroke-width="2.4"/>
   </g>
 </svg>`.trim() },
-    { key:'wrench', name:'Llave', svg: `
+    { key:'tools', name:'Herramientas', svg: `
 <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
-  <path d="M44 8a12 12 0 0 0-11 16L10 47a4 4 0 0 0 0 6l1 1a4 4 0 0 0 6 0l23-23a12 12 0 0 0 14-15l-7 7-6-1-1-6z" fill="currentColor" fill-opacity=".22" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/>
+  <g fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="32" cy="32" r="26" stroke-opacity=".25"/>
+    <path d="M16 48 L36 28" />
+    <path d="M14 50 a4 4 0 1 1 5 -5" />
+    <path d="M44 22 a8 8 0 1 0 -12 -8 l6 6 -4 4 -6 -6 a8 8 0 0 0 12 8 z" fill="currentColor" fill-opacity=".2"/>
+    <path d="M50 14 L30 34" />
+    <path d="M52 12 l4 4 -4 4 -4 -4 z" fill="currentColor" fill-opacity=".3"/>
+  </g>
+</svg>`.trim() },
+    { key:'gear', name:'Engranaje', svg: `
+<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <g fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M32 6 L35 12 L41.5 11 L43 17.5 L49 19.5 L48 26 L53 30 L50 35.5 L52 41.5 L46 44 L44 50 L37.5 50 L34 55.5 L28 53.5 L22 55 L19 49.5 L13 47.5 L13 41 L8 36.5 L11.5 31 L10 25 L15 22 L16.5 15.5 L23 14.5 L27 9 Z" fill="currentColor" fill-opacity=".14"/>
+    <circle cx="32" cy="32" r="9" fill="currentColor" fill-opacity=".22"/>
+    <circle cx="32" cy="32" r="3.4" fill="currentColor"/>
+  </g>
+</svg>`.trim() },
+    { key:'shield', name:'Garantía', svg: `
+<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <g fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M32 6 L52 14 L52 32 C52 44 42 54 32 58 C22 54 12 44 12 32 L12 14 Z" fill="currentColor" fill-opacity=".15"/>
+    <path d="M22 32 L29 39 L43 24" stroke-width="3.2"/>
+  </g>
 </svg>`.trim() },
     { key:'circuit', name:'Circuito', svg: `
 <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
-  <g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-    <rect x="14" y="14" width="36" height="36" rx="4" fill="currentColor" fill-opacity=".1"/>
-    <path d="M22 22h8v8h-8z M34 22h8 M34 30h8 M22 38h20 M22 46h8 M34 46h8"/>
-    <circle cx="42" cy="22" r="2.4" fill="currentColor"/>
-    <circle cx="42" cy="30" r="2.4" fill="currentColor"/>
-    <circle cx="30" cy="46" r="2.4" fill="currentColor"/>
+  <g fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="12" y="12" width="40" height="40" rx="6" fill="currentColor" fill-opacity=".08"/>
+    <path d="M22 22 h8 v8 h-8z M34 22 h10 M34 30 h10 M22 38 h22 M22 46 h8 M34 46 h10"/>
+    <circle cx="44" cy="22" r="2.6" fill="currentColor"/>
+    <circle cx="44" cy="30" r="2.6" fill="currentColor"/>
+    <circle cx="30" cy="46" r="2.6" fill="currentColor"/>
   </g>
 </svg>`.trim() },
     { key:'bolt', name:'Energía', svg: `
 <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
-  <path d="M36 4 L14 36 h12 L22 60 L50 26 H38 z" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+  <defs><linearGradient id="lg-bl" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="currentColor" stop-opacity=".95"/>
+    <stop offset="1" stop-color="currentColor" stop-opacity=".5"/>
+  </linearGradient></defs>
+  <path d="M36 4 L14 36 h12 L22 60 L50 26 H38 z" fill="url(#lg-bl)" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/>
 </svg>`.trim() },
-    { key:'screwdriver', name:'Destornillador', svg: `
+    { key:'diamond', name:'Diamante', svg: `
 <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
-  <g fill="none" stroke="currentColor" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M44 6 L58 20 L40 38 L26 24 z" fill="currentColor" fill-opacity=".22"/>
-    <path d="M26 24 L8 42 a4 4 0 0 0 0 6 l8 8 a4 4 0 0 0 6 0 L40 38" />
+  <g fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M14 24 L24 10 L40 10 L50 24 L32 56 Z" fill="currentColor" fill-opacity=".18"/>
+    <path d="M14 24 H50 M24 10 L32 24 L40 10 M14 24 L32 24 L50 24"/>
   </g>
+</svg>`.trim() },
+    { key:'wrench', name:'Llave', svg: `
+<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <path d="M44 8a12 12 0 0 0-11 16L10 47a4 4 0 0 0 0 6l1 1a4 4 0 0 0 6 0l23-23a12 12 0 0 0 14-15l-7 7-6-1-1-6z" fill="currentColor" fill-opacity=".22" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round"/>
 </svg>`.trim() }
   ];
 
+  // Compatibilidad con presets antiguos guardados en DB
+  const LOGO_ALIASES = { screwdriver:'tools' };
 
   function logoHtml(){
     const custom = DB.settings.logo;
     if(custom) return `<img src="${custom}" alt="logo">`;
-    const key = DB.settings.logoPreset || 'tools';
+    let key = DB.settings.logoPreset || 'phoenix';
+    if(LOGO_ALIASES[key]) key = LOGO_ALIASES[key];
     const p = LOGO_PRESETS.find(x=>x.key===key) || LOGO_PRESETS[0];
     return p.svg;
   }
@@ -70,13 +93,11 @@ const App = (() => {
     if(app) app.innerHTML = html;
     if(login) login.innerHTML = html;
     document.title = name;
-    // logos
     const lh = logoHtml();
     const al = document.getElementById('appLogo');
     const ll = document.getElementById('loginLogo');
     if(al) al.innerHTML = lh;
     if(ll) ll.innerHTML = lh;
-    // creator contacts
     renderCreatorChips();
   }
 

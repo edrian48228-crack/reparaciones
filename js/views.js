@@ -306,10 +306,16 @@ const Views = (() => {
         <div class="form-group">
           <label>Fotos del equipo</label>
           <div id="devicePhotos" class="multi-photo-grid"></div>
-          <label class="photo-add-btn">
-            ${ICONS.plus}<span>Añadir foto del equipo (cámara o galería)</span>
-            <input type="file" accept="image/*" id="addDevicePhoto" multiple>
-          </label>
+          <div class="photo-add-row">
+            <label class="photo-add-btn cam">
+              ${ICONS.camera}<span>Tomar foto</span>
+              <input type="file" accept="image/*" capture="environment" id="addDevicePhotoCam">
+            </label>
+            <label class="photo-add-btn gal">
+              ${ICONS.upload}<span>Galería</span>
+              <input type="file" accept="image/*" id="addDevicePhoto" multiple>
+            </label>
+          </div>
         </div>
 
         <div class="form-group">
@@ -439,26 +445,46 @@ const Views = (() => {
       });
     }
     renderDevicePhotos();
-    document.getElementById('addDevicePhoto').addEventListener('change', async e=>{
+    async function handleDevicePhotoInput(e){
       for(const f of Array.from(e.target.files||[])){
         try{ photos.device.push(await UI.resizeImage(f)); }catch(err){ UI.toast('Error con imagen'); }
       }
       e.target.value = '';
       renderDevicePhotos();
-    });
+    }
+    document.getElementById('addDevicePhoto').addEventListener('change', handleDevicePhotoInput);
+    const _devCam = document.getElementById('addDevicePhotoCam');
+    if(_devCam) _devCam.addEventListener('change', handleDevicePhotoInput);
 
     // Foto cliente
     function renderClient(){
       const box = document.getElementById('clientPhotoBox');
       box.classList.toggle('has-img', !!photos.client);
-      box.innerHTML = photos.client
-        ? `<img src="${photos.client}" id="clientPhotoImg"><input type="file" accept="image/*" id="clientPhotoInput"><button type="button" class="photo-remove" id="clientPhotoRm">${ICONS.trash}</button>`
-        : `${ICONS.person}<span>Foto cliente<br><small>cámara o galería</small></span><input type="file" accept="image/*" id="clientPhotoInput">`;
-      const inp = document.getElementById('clientPhotoInput');
-      if(inp) inp.onchange = async e=>{
+      if(photos.client){
+        box.innerHTML = `
+          <img src="${photos.client}" id="clientPhotoImg">
+          <div class="client-photo-actions">
+            <label class="cp-mini" title="Reemplazar con cámara">${ICONS.camera}<input type="file" accept="image/*" capture="user" id="clientPhotoCam"></label>
+            <label class="cp-mini" title="Reemplazar desde galería">${ICONS.upload}<input type="file" accept="image/*" id="clientPhotoInput"></label>
+          </div>
+          <button type="button" class="photo-remove" id="clientPhotoRm">${ICONS.trash}</button>`;
+      } else {
+        box.innerHTML = `
+          ${ICONS.person}
+          <span>Foto cliente</span>
+          <div class="client-photo-actions empty">
+            <label class="cp-btn cam">${ICONS.camera}<span>Cámara</span><input type="file" accept="image/*" capture="user" id="clientPhotoCam"></label>
+            <label class="cp-btn gal">${ICONS.upload}<span>Galería</span><input type="file" accept="image/*" id="clientPhotoInput"></label>
+          </div>`;
+      }
+      async function onPick(e){
         const f = e.target.files[0]; if(!f) return;
         try{ photos.client = await UI.resizeImage(f); renderClient(); }catch(err){ UI.toast('Error con imagen'); }
-      };
+      }
+      const inp = document.getElementById('clientPhotoInput');
+      if(inp) inp.onchange = onPick;
+      const cam = document.getElementById('clientPhotoCam');
+      if(cam) cam.onchange = onPick;
       const rm = document.getElementById('clientPhotoRm');
       if(rm) rm.onclick = e=>{ e.preventDefault(); e.stopPropagation(); photos.client = null; renderClient(); };
       const img = document.getElementById('clientPhotoImg');
@@ -1470,11 +1496,11 @@ const Views = (() => {
         </div>
         <div class="cv-tile-grid">
           <div class="cv-mini sale"><span>Ventas</span><b>${fmtMoney(b.salesIncome)}</b></div>
-          <div class="cv-mini repair"><span>Reparaciones</span><b>${fmtMoney(b.repairIncome)}</b></div>
-          <div class="cv-mini cost"><span>Costo vendido</span><b>${fmtMoney(b.salesCost)}</b></div>
-          <div class="cv-mini cost"><span>Piezas usadas</span><b>${fmtMoney(b.repairPartsCost)}</b></div>
-          <div class="cv-mini buy"><span>Compras stock</span><b>${fmtMoney(b.purchases)}</b></div>
-          <div class="cv-mini count"><span>Movs</span><b>${b.countSales+b.countPurchases+b.countRepairs}</b></div>
+          <div class="cv-mini repair"><span>Servicios</span><b>${fmtMoney(b.repairIncome)}</b></div>
+          <div class="cv-mini cost"><span>Costo merc.</span><b>${fmtMoney(b.salesCost)}</b></div>
+          <div class="cv-mini cost"><span>Piezas</span><b>${fmtMoney(b.repairPartsCost)}</b></div>
+          <div class="cv-mini buy"><span>Inversión</span><b>${fmtMoney(b.purchases)}</b></div>
+          <div class="cv-mini count"><span>Movs.</span><b>${b.countSales+b.countPurchases+b.countRepairs}</b></div>
         </div>
       </div>`;
     }
@@ -1486,7 +1512,7 @@ const Views = (() => {
         ${tile('Este año', stats.year)}
         ${tile('Total histórico', stats.total, 'gold')}
       </div>
-      <p class="muted xsmall" style="margin-top:10px"><b>Ganancia</b> grande = (Ventas − Costo vendido) + (Reparaciones − Piezas usadas). <b>Compras stock</b> es lo invertido en piezas/insumos.</p>`;
+      <p class="muted xsmall" style="margin-top:10px"><b>Ganancia</b> = (Ventas − Costo merc.) + (Servicios − Piezas). <b>Inversión</b> es lo gastado en compras de stock.</p>`;
   }
 
   function stockPanelHtml(){
@@ -1558,7 +1584,7 @@ const Views = (() => {
         <button class="acc-head" data-acc type="button">
           <span class="acc-ico">${ICONS.box}</span>
           <span class="acc-title">Contabilidad e ingresos</span>
-          <span class="acc-sub">Ganancia total · ventas · reparaciones · inversión</span>
+          <span class="acc-sub">Ganancia · ventas · servicios · inversión</span>
           <span class="acc-chev"></span>
         </button>
         <div class="acc-body">${cvStatsTilesHtml()}</div>
